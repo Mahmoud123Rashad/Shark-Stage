@@ -1,9 +1,9 @@
+import 'package:finial_project/screens/entrepreneur_bottom_nav_bar.dart';
+import 'package:finial_project/screens/investor_bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_colors.dart';
-import 'entrepreneur_dashboard.dart';
-import 'projects_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,55 +19,55 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+Future<void> _login() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+  setState(() => _isLoading = true);
 
-    try {
-      final userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+  try {
+    final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
 
-      final uid = userCredential.user!.uid;
+    final uid = userCredential.user!.uid;
 
-      final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
-      if (!doc.exists) {
-        throw Exception("User data not found in Firestore");
-      }
-
-      final role = doc['role'];
-
-      if (role == 'Entrepreneur') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const EntrepreneurDashboard()),
-        );
-      } else if (role == 'Investor') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ProjectsScreen()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Unknown user role ⚠️")),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed: ${e.message}")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    } finally {
-      setState(() => _isLoading = false);
+    if (!userDoc.exists) {
+      throw Exception("User data not found in Firestore.");
     }
+
+    final role = userDoc['role']; 
+    if (role == 'Entrepreneur') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const EntrepreneurBottomNavBar()), 
+      );
+    } else if (role == 'Investor') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const InvestorBottomNavBar()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unknown user role ⚠️")),
+      );
+    }
+  } on FirebaseAuthException catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Login failed: ${e.message}")),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error: $e")),
+    );
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {

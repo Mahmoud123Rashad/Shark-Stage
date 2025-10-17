@@ -35,7 +35,7 @@ class _SharkTankAppState extends State<SharkTankApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Shark Tank',
+      title: 'Shark stage',
       debugShowCheckedModeBanner: false,
       themeMode: _themeMode, //  Switch between light/dark
       theme: ThemeData(
