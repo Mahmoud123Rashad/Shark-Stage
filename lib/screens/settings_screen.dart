@@ -1,30 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_provider.dart';
+import 'login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Settings"),
+        title: const Text("Settings",style: TextStyle(color: Colors.black)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.mainGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.mainGradient),
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const ListTile(
-              leading: Icon(Icons.color_lens_outlined, color: Colors.white),
-              title: Text("Theme"),
-              subtitle: Text("Switch between Light and Dark mode"),
-              textColor: Colors.white,
+            ListTile(
+              leading: const Icon(Icons.color_lens_outlined, color: Colors.white),
+              title: const Text("Theme", style: TextStyle(color: Colors.white)),
+              subtitle: Text(
+                themeProvider.isDarkMode ? "Dark Mode" : "Light Mode",
+                style: const TextStyle(color: Colors.white70),
+              ),
+              onTap: () {
+                themeProvider.toggleTheme();
+              },
             ),
             const Divider(color: Colors.white30),
 
@@ -45,15 +54,12 @@ class SettingsScreen extends StatelessWidget {
             const Divider(color: Colors.white30),
 
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text(
-                "Logout",
-                style: TextStyle(color: Colors.redAccent),
-              ),
+              leading: const Icon(Icons.logout, color: Colors.white),
+              title: const Text("Logout", style: TextStyle(color: Colors.white)),
               onTap: () {
-                // هنا ممكن تضيف تسجيل الخروج من Firebase
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Logout clicked")),
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
               },
             ),

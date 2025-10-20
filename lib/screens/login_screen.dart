@@ -51,7 +51,7 @@ Future<void> _login() async {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unknown user role ⚠️")),
+        const SnackBar(content: Text("Unknown user role")),
       );
     }
   } on FirebaseAuthException catch (e) {

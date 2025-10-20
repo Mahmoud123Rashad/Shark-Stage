@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 import 'intro_investor.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key, required void Function() onToggleTheme});
+  const SplashScreen({super.key});  
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen>
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
           ..repeat(reverse: true);
 
-    Timer(const Duration(seconds: 10), () {
+    Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const IntroInvestorScreen()),
@@ -46,31 +46,31 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-             ScaleTransition(
-  scale: Tween(begin: 0.9, end: 1.1).animate(
-    CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-  ),
-  child: Container(
-    width: 250, 
-    height: 250, 
-    decoration: BoxDecoration(
-      shape: BoxShape.circle, 
-      border: Border.all(color: const Color.fromARGB(255, 94, 126, 194), width: 4), 
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.25),
-          blurRadius: 15,
-          offset: const Offset(0, 8),
-        ),
-      ],
-      image: const DecorationImage(
-        image: AssetImage('images/Logo.jpeg'),
-        fit: BoxFit.cover,
-      ),
-    ),
-  ),
-),
-
+              ScaleTransition(
+                scale: Tween(begin: 0.9, end: 1.1).animate(
+                  CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+                ),
+                child: Container(
+                  width: 250,
+                  height: 250,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: Color.fromARGB(255, 94, 126, 194), width: 4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        blurRadius: 15,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                    image: const DecorationImage(
+                      image: AssetImage('images/Logo.jpeg'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 50),
               const Text(
                 "SharkStage",
