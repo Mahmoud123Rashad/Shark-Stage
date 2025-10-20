@@ -1,171 +1,52 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import 'project_details_screen.dart';
+import '../theme/app_colors.dart'; 
 
-class EntrepreneurDashboard extends StatefulWidget {
+class EntrepreneurDashboard extends StatelessWidget {
   const EntrepreneurDashboard({super.key});
 
-  @override
-  State<EntrepreneurDashboard> createState() => _EntrepreneurDashboardState();
-}
-
-class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
-  final user = FirebaseAuth.instance.currentUser;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: AppColors.button,
-        elevation: 0,
-        title: const Text(
-          "Entrepreneur Dashboard",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
+  Widget _statCard(String title, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        height: 100,
+        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
           children: [
-            // 👋 Welcome Header
-            Row(
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: color.withOpacity(0.15),
+              child: Icon(icon, color: color, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white24,
-                  child: Icon(Icons.person, size: 35, color: AppColors.button),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 13, color: Colors.black54),
                 ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Welcome 👋",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.secondary,
-                        fontSize: 18,
-                      ),
-                    ),
-                    Text(
-                      user?.email ?? "Entrepreneur",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                )
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.heading,
+                  ),
+                ),
               ],
-            ),
-
-            const SizedBox(height: 25),
-
-            //  Stats Cards
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildStatCard("Projects", Icons.work_outline, Colors.blue),
-                _buildStatCard("Investors", Icons.people_outline, Colors.green),
-                _buildStatCard("Funded", Icons.attach_money, Colors.amber),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              "Your Projects",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 🧾 List of Projects
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('projects')
-                  .where('ownerId', isEqualTo: user?.uid)
-                  .orderBy('createdAt', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                      child: Padding(
-                    padding: EdgeInsets.all(20),
-                    child: CircularProgressIndicator(),
-                  ));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        "No projects yet.\nStart adding your first project!",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontSize: 16),
-                      ),
-                    ),
-                  );
-                }
-
-                final projects = snapshot.data!.docs;
-
-                return ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: projects.length,
-                  itemBuilder: (context, index) {
-                    final project = projects[index];
-                    final data = project.data() as Map<String, dynamic>;
-                    return Card(
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            data['imageUrl'] ?? '',
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.image_not_supported, size: 40),
-                          ),
-                        ),
-                        title: Text(
-                          data['title'] ?? 'Untitled Project',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          "Type: ${data['saleType']} • Price: \$${data['price']}",
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                            size: 18, color: AppColors.button),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ProjectDetailsScreen(
-                                projectId: project.id,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
             ),
           ],
         ),
@@ -173,28 +54,94 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
     );
   }
 
-  //  Reusable Stat Card
-  Widget _buildStatCard(String title, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(16),
+  Widget _projectCard(String projectName, String status, double progress) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(projectName,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.heading)),
+          const SizedBox(height: 6),
+          Text(status, style: const TextStyle(color: AppColors.paragraph)),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: AppColors.soft,
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(6),
+            minHeight: 6,
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text(
+          "Entrepreneur Dashboard",
+          style: TextStyle(color: Colors.white),
         ),
+        flexibleSpace: Container(decoration: const BoxDecoration(gradient: AppColors.mainGradient)),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+            // Header
+            const Text(
+              "Welcome 👋",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.heading),
             ),
+            const SizedBox(height: 8),
+            const Text(
+              "Here's a quick overview of your performance today",
+              style: TextStyle(color: AppColors.paragraph),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Statistic cards
+            Row(
+              children: [
+                _statCard("Projects", "12", Icons.business_center, AppColors.primary),
+                _statCard("Earnings", "₤ 8,420", Icons.attach_money, AppColors.button),
+              ],
+            ),
+            Row(
+              children: [
+                _statCard("New Orders", "5", Icons.shopping_cart, AppColors.secondary),
+                _statCard("Clients", "32", Icons.people_alt, Colors.teal),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Projects section
+            const Text(
+              "Current Projects",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.heading),
+            ),
+            const SizedBox(height: 10),
+
+            _projectCard("Project Management App", "In Progress", 0.7),
+            _projectCard("Smart Store Platform", "Under Development", 0.4),
+            _projectCard("Order Tracking System", "Completed", 1.0),
           ],
         ),
       ),

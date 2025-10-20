@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:file_picker/file_picker.dart';
+import "package:file_picker/file_picker.dart";
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_colors.dart';
@@ -84,8 +84,9 @@ class _Add_projectState extends State<Add_project> {
       final imageRef = FirebaseStorage.instance.ref(
         'projects/${user.uid}/images/${DateTime.now().millisecondsSinceEpoch}.jpg',
       );
-      final imageSnap =
-          await imageRef.putFile(_projectImage!).whenComplete(() {});
+      final imageSnap = await imageRef
+          .putFile(_projectImage!)
+          .whenComplete(() {});
       final imageUrl = await imageSnap.ref.getDownloadURL();
 
       String? pdfUrl;
@@ -93,8 +94,7 @@ class _Add_projectState extends State<Add_project> {
         final pdfRef = FirebaseStorage.instance.ref(
           'projects/${user.uid}/pdfs/${DateTime.now().millisecondsSinceEpoch}.pdf',
         );
-        final pdfSnap =
-            await pdfRef.putFile(_pdfFile!).whenComplete(() {});
+        final pdfSnap = await pdfRef.putFile(_pdfFile!).whenComplete(() {});
         pdfUrl = await pdfSnap.ref.getDownloadURL();
       }
 
@@ -123,9 +123,9 @@ class _Add_projectState extends State<Add_project> {
         saleType = 'Full';
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error saving project: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error saving project: $e")));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -146,9 +146,7 @@ class _Add_projectState extends State<Add_project> {
         centerTitle: true,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.mainGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.mainGradient),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 100),
           child: Card(
@@ -202,13 +200,17 @@ class _Add_projectState extends State<Add_project> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.add_a_photo,
-                                        color: AppColors.primary, size: 40),
+                                    Icon(
+                                      Icons.add_a_photo,
+                                      color: AppColors.primary,
+                                      size: 40,
+                                    ),
                                     SizedBox(height: 8),
                                     Text(
                                       "Tap to upload project image",
                                       style: TextStyle(
-                                          color: AppColors.paragraph),
+                                        color: AppColors.paragraph,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -218,29 +220,46 @@ class _Add_projectState extends State<Add_project> {
                     const SizedBox(height: 20),
 
                     _buildField(
-                        _titleController, "Project Title", Icons.title, "Enter title"),
-                    _buildField(_detailsController, "Project Details",
-                        Icons.description, "Enter details",
-                        maxLines: 4),
-                    _buildField(_priceController, "Project Price",
-                        Icons.monetization_on, "Enter price",
-                        type: TextInputType.number),
+                      _titleController,
+                      "Project Title",
+                      Icons.title,
+                      "Enter title",
+                    ),
+                    _buildField(
+                      _detailsController,
+                      "Project Details",
+                      Icons.description,
+                      "Enter details",
+                      maxLines: 4,
+                    ),
+                    _buildField(
+                      _priceController,
+                      "Project Price",
+                      Icons.monetization_on,
+                      "Enter price",
+                      type: TextInputType.number,
+                    ),
                     const SizedBox(height: 12),
 
                     DropdownButtonFormField<String>(
                       value: saleType,
                       items: const [
                         DropdownMenuItem(
-                            value: 'Full', child: Text("Sell Full Project")),
+                          value: 'Full',
+                          child: Text("Sell Full Project"),
+                        ),
                         DropdownMenuItem(
-                            value: 'Partial',
-                            child: Text("Sell Part of Project")),
+                          value: 'Partial',
+                          child: Text("Sell Part of Project"),
+                        ),
                       ],
                       onChanged: (v) => setState(() => saleType = v!),
                       decoration: InputDecoration(
                         labelText: "Sale Type",
-                        prefixIcon: const Icon(Icons.sell_outlined,
-                            color: AppColors.primary),
+                        prefixIcon: const Icon(
+                          Icons.sell_outlined,
+                          color: AppColors.primary,
+                        ),
                         filled: true,
                         fillColor: AppColors.soft,
                         border: OutlineInputBorder(
@@ -263,20 +282,27 @@ class _Add_projectState extends State<Add_project> {
 
                     ElevatedButton.icon(
                       onPressed: _pickPDF,
-                      icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-                      label: const Text("Upload Project PDF"),
+                      icon: const Icon(
+                        Icons.picture_as_pdf,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        "Upload Project PDF",
+                        style: TextStyle(color: Colors.white),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                     if (_pdfFile != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          "📎 ${_pdfFile!.path.split('/').last}",
+                          " ${_pdfFile!.path.split('/').last}",
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: AppColors.paragraph),
                         ),
@@ -289,8 +315,7 @@ class _Add_projectState extends State<Add_project> {
                             onPressed: _saveProject,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.button,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -299,9 +324,10 @@ class _Add_projectState extends State<Add_project> {
                             child: const Text(
                               "Save Project",
                               style: TextStyle(
-                                  fontSize: 18,
-                                  color: AppColors.heading,
-                                  fontWeight: FontWeight.bold),
+                                fontSize: 18,
+                                color: AppColors.heading,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                   ],
@@ -315,9 +341,14 @@ class _Add_projectState extends State<Add_project> {
   }
 
   // Custom field
-  Widget _buildField(TextEditingController c, String label, IconData icon,
-      String vMsg,
-      {TextInputType type = TextInputType.text, int maxLines = 1}) {
+  Widget _buildField(
+    TextEditingController c,
+    String label,
+    IconData icon,
+    String vMsg, {
+    TextInputType type = TextInputType.text,
+    int maxLines = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
@@ -330,9 +361,7 @@ class _Add_projectState extends State<Add_project> {
           prefixIcon: Icon(icon, color: AppColors.primary),
           filled: true,
           fillColor: AppColors.soft,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_provider.dart';
 import 'add-project.dart';
 import 'projects_screen.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class SignUpScreen extends StatefulWidget {
-  final VoidCallback onToggleTheme;
-
-  const SignUpScreen({super.key, required this.onToggleTheme});
+  const SignUpScreen({super.key, required Null Function() onToggleTheme});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -25,7 +25,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // Sign up with email
   Future<void> _signUpWithEmail() async {
     if (!_formKey.currentState!.validate()) return;
-
     if (selectedRole == null) {
       _showSnack("Please select your role");
       return;
@@ -68,31 +67,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  //  Sign in with Google
+  // Sign in with Google
   Future<void> _signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        _showSnack("Sign-in cancelled");
+        return;
+      }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
+        accessToken: googleAuth.accessToken,
       );
 
       final userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
-
       final user = userCredential.user;
-      final userDoc =
-          FirebaseFirestore.instance.collection('users').doc(user!.uid);
 
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(user!.uid);
       final snapshot = await userDoc.get();
 
       String role;
-
       if (!snapshot.exists) {
         role = await _selectRoleDialog();
         await userDoc.set({
@@ -116,7 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
 
-      _showSnack("Signed in with Google ");
+      _showSnack("Signed in with Google");
     } catch (e) {
       _showSnack("Google Sign-In failed: $e");
     }
@@ -172,7 +170,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
 
     return Scaffold(
       body: Container(
@@ -188,6 +187,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: SafeArea(
           child: Stack(
             children: [
+              // زر تبديل الثيم
               Positioned(
                 top: 20,
                 right: 20,
@@ -197,9 +197,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     color: Colors.white,
                     size: 28,
                   ),
-                  onPressed: widget.onToggleTheme,
+                  onPressed: () => themeProvider.toggleTheme(),
                 ),
               ),
+              // محتوى الصفحة
               Center(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
@@ -221,7 +222,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         const SizedBox(height: 25),
 
-                        // Box
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
@@ -232,20 +232,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           child: Column(
                             children: [
                               _buildTextField(
-                                controller: _emailController,
-                                label: "Email",
-                                icon: Icons.email_outlined,
-                                validatorMsg: "Enter your email",
-                              ),
+                                  controller: _emailController,
+                                  label: "Email",
+                                  icon: Icons.email_outlined,
+                                  validatorMsg: "Enter your email"),
                               const SizedBox(height: 20),
                               _buildTextField(
-                                controller: _passwordController,
-                                label: "Password",
-                                icon: Icons.lock_outline,
-                                isPassword: true,
-                                validatorMsg:
-                                    "Password must be at least 6 characters",
-                              ),
+                                  controller: _passwordController,
+                                  label: "Password",
+                                  icon: Icons.lock_outline,
+                                  isPassword: true,
+                                  validatorMsg: "Password must be at least 6 characters"),
                               const SizedBox(height: 20),
                               const Text(
                                 "I am a...",
@@ -256,7 +253,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-
                               ToggleButtons(
                                 isSelected: [
                                   selectedRole == "Entrepreneur",
