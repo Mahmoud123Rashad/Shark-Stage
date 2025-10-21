@@ -1,8 +1,9 @@
-import 'package:finial_project/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../theme/app_colors.dart';
+import 'edit_profile_screen.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,6 +14,12 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   File? _profileImage;
+
+  // بيانات المستخدم الحالية
+  String firstName = "Mahmoud";
+  String lastName = "Diab";
+  String email = "mahmoud@example.com";
+  String phone = "+20 103 209 2421";
 
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -41,7 +48,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const SizedBox(height: 20),
 
-            // Profile Image + edit button
+            // صورة البروفايل
             Center(
               child: Stack(
                 children: [
@@ -51,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     backgroundImage: _profileImage != null
                         ? FileImage(_profileImage!)
                         : const AssetImage('images/profile.jpeg')
-                              as ImageProvider,
+                            as ImageProvider,
                   ),
                   Positioned(
                     bottom: 0,
@@ -61,11 +68,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: CircleAvatar(
                         backgroundColor: AppColors.primary,
                         radius: 20,
-                        child: const Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                        child: const Icon(Icons.camera_alt,
+                            color: Colors.white, size: 20),
                       ),
                     ),
                   ),
@@ -75,48 +79,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 16),
 
-            // Name
-            const Text(
-              "Mahmoud Rashad",
-              style: TextStyle(
+            // الاسم الكامل
+            Text(
+              "$firstName $lastName",
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: AppColors.heading,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              "Entrepreneur",
-              style: TextStyle(color: AppColors.paragraph),
-            ),
+            const Text("Entrepreneur",
+                style: TextStyle(color: AppColors.paragraph)),
 
             const SizedBox(height: 30),
 
-            // Info cards
-            _infoTile(Icons.person, "First Name", "Mahmoud"),
-            _infoTile(Icons.person_outline, "Last Name", "Diab"),
-            _infoTile(Icons.email, "Email", "mahmoud@example.com"),
-            _infoTile(Icons.phone, "Phone", "+20 103 209 2421"),
+            // معلومات المستخدم
+            _infoTile(Icons.person, "First Name", firstName),
+            _infoTile(Icons.person_outline, "Last Name", lastName),
+            _infoTile(Icons.email, "Email", email),
+            _infoTile(Icons.phone, "Phone", phone),
 
             const SizedBox(height: 25),
 
-            // Buttons
+            // زر تعديل الملف
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                    borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () {},
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditProfileScreen(
+                      firstName: firstName,
+                      lastName: lastName,
+                      email: email,
+                      phone: phone,
+                      image: _profileImage,
+                    ),
+                  ),
+                );
+
+                // تحديث البيانات بعد الرجوع من صفحة التعديل
+                if (result != null) {
+                  setState(() {
+                    firstName = result['firstName'];
+                    lastName = result['lastName'];
+                    email = result['email'];
+                    phone = result['phone'];
+                    _profileImage = result['image'];
+                  });
+                }
+              },
               icon: const Icon(Icons.edit, color: Colors.white),
-              label: const Text(
-                "Edit Profile",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
+              label: const Text("Edit Profile",
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
+
             const SizedBox(height: 12),
+
+            // زر تسجيل الخروج
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
@@ -165,17 +191,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
-              ),
+              Text(label,
+                  style: const TextStyle(fontSize: 13, color: Colors.black54)),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
           ),
