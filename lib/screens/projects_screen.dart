@@ -1,121 +1,4 @@
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:flutter/material.dart';
-// import '../theme/app_colors.dart';
-// import 'project_details_screen.dart';
-
-// class ProjectsScreen extends StatelessWidget {
-//   const ProjectsScreen({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text("Available Projects"),
-//         backgroundColor: AppColors.button,
-//       ),
-//       body: StreamBuilder<QuerySnapshot>(
-//         stream: FirebaseFirestore.instance
-//             .collection('projects')
-//             .orderBy('createdAt', descending: true)
-//             .snapshots(),
-//         builder: (context, snapshot) {
-//           if (snapshot.connectionState == ConnectionState.waiting) {
-//             return const Center(child: CircularProgressIndicator());
-//           }
-//           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-//             return const Center(child: Text("No projects available."));
-//           }
-
-//           final projects = snapshot.data!.docs;
-
-//           return ListView.builder(
-//             padding: const EdgeInsets.all(10),
-//             itemCount: projects.length,
-//             itemBuilder: (context, index) {
-//               final project = projects[index];
-//               return Card(
-//                 margin: const EdgeInsets.symmetric(vertical: 8),
-//                 elevation: 4,
-//                 shape: RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.circular(15),
-//                 ),
-//                 child: Padding(
-//                   padding: const EdgeInsets.all(12),
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       // Project Image
-//                       if (project['imageUrl'] != null && project['imageUrl'] != '')
-//                         ClipRRect(
-//                           borderRadius: BorderRadius.circular(12),
-//                           child: Image.network(
-//                             project['imageUrl'],
-//                             height: 180,
-//                             width: double.infinity,
-//                             fit: BoxFit.cover,
-//                           ),
-//                         ),
-//                       const SizedBox(height: 10),
-
-//                       // Project Title
-//                       Text(
-//                         project['title'],
-//                         style: const TextStyle(
-//                           fontSize: 20,
-//                           fontWeight: FontWeight.bold,
-//                         ),
-//                       ),
-//                       const SizedBox(height: 5),
-
-//                       // Project Details (3 lines)
-//                       Text(
-//                         project['details'],
-//                         maxLines: 3,
-//                         overflow: TextOverflow.ellipsis,
-//                         style: const TextStyle(fontSize: 16, color: Colors.grey),
-//                       ),
-//                       const SizedBox(height: 5),
-
-//                       // Price
-//                       Text(
-//                         "Price: \$${project['price']}",
-//                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-//                       ),
-//                       const SizedBox(height: 8),
-
-//                       // View Details Button
-//                       Align(
-//                         alignment: Alignment.centerRight,
-//                         child: ElevatedButton(
-//                           onPressed: () {
-//                             Navigator.push(
-//                               context,
-//                               MaterialPageRoute(
-//                                 builder: (_) => ProjectDetailsScreen(
-//                                   projectId: project.id,
-//                                 ),
-//                               ),
-//                             );
-//                           },
-//                           style: ElevatedButton.styleFrom(
-//                             backgroundColor: AppColors.button,
-//                           ),
-//                           child: const Text("View Full Project"),
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               );
-//             },
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import 'project_details_screen.dart';
 
 class ProjectsScreen extends StatelessWidget {
@@ -123,6 +6,9 @@ class ProjectsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final List<Map<String, dynamic>> projects = List.generate(10, (index) {
       return {
         'title': 'Project ${index + 1}',
@@ -136,12 +22,29 @@ class ProjectsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Available Projects"),
-        backgroundColor: AppColors.button,
+        title: Text(
+          "Available Projects",
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.appBarTheme.foregroundColor ?? Colors.white,
+          ),
+        ),
+        backgroundColor: theme.colorScheme.primary,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.mainGradient,
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const LinearGradient(
+                  colors: [Color(0xFF121212), Color(0xFF1E1E1E)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [Color(0xFF6A5AE0), Color(0xFF8F8AE6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
         ),
         child: ListView.builder(
           padding: const EdgeInsets.all(12),
@@ -150,10 +53,10 @@ class ProjectsScreen extends StatelessWidget {
             final project = projects[index];
 
             return Card(
-              color: Colors.white.withOpacity(0.1),
+              color: theme.cardColor.withOpacity(isDark ? 0.3 : 0.9),
               margin: const EdgeInsets.symmetric(vertical: 10),
               elevation: 6,
-              shadowColor: Colors.black38,
+              shadowColor: theme.shadowColor.withOpacity(0.3),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
@@ -172,65 +75,65 @@ class ProjectsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-
                     Text(
                       project['title'],
-                      style: const TextStyle(
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontSize: 20,
-                        color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 6),
-
                     Text(
                       project['details'],
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 16,
-                        color: Colors.white70,
                         height: 1.4,
+                        color: theme.textTheme.bodyMedium?.color
+                            ?.withOpacity(0.8),
                       ),
                     ),
                     const SizedBox(height: 8),
-
                     Text(
                       "Investment: \$${project['price']}",
-                      style: const TextStyle(
-                        color: Colors.amber,
+                      style: TextStyle(
+                        color: theme.colorScheme.secondary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 10),
-
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ProjectDetailsScreen(
-                                projectId: 'project_${index + 1}',
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                        label: const Text("View Full Project"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.button,
-                          foregroundColor: Colors.white,
-                          shape: const StadiumBorder(),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 25,
-                            vertical: 12,
-                          ),
-                        ),
-                      ),
-                    ),
+                   Align(
+  alignment: Alignment.centerRight,
+  child: ElevatedButton(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProjectDetailsScreen(
+            projectId: 'project_${index + 1}',
+          ),
+        ),
+      );
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: theme.colorScheme.primary,
+      foregroundColor: Colors.white,
+      shape: const StadiumBorder(),
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: const [
+        Text("View Full Project"),
+        SizedBox(width: 8),
+        Icon(Icons.arrow_forward_ios, size: 16),
+      ],
+    ),
+  ),
+)
                   ],
                 ),
               ),

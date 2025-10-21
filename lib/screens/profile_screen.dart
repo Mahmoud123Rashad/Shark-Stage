@@ -1,6 +1,5 @@
 import 'package:finial_project/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
@@ -25,13 +24,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Profile", style: TextStyle(color: Colors.white)),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(gradient: AppColors.mainGradient),
+        title: Text(
+          "Profile",
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.appBarTheme.foregroundColor ?? Colors.white,
+          ),
         ),
+        backgroundColor: theme.appBarTheme.backgroundColor,
         centerTitle: true,
         elevation: 0,
       ),
@@ -40,18 +45,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-
-            // Profile Image + edit button
             Center(
               child: Stack(
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: AppColors.soft,
+                    backgroundColor:
+                        theme.colorScheme.surfaceContainerHighest ?? Colors.grey.shade200,
                     backgroundImage: _profileImage != null
                         ? FileImage(_profileImage!)
                         : const AssetImage('images/profile.jpeg')
-                              as ImageProvider,
+                            as ImageProvider,
                   ),
                   Positioned(
                     bottom: 0,
@@ -59,13 +63,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: CircleAvatar(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: theme.colorScheme.primary,
                         radius: 20,
-                        child: const Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                       ),
                     ),
                   ),
@@ -74,36 +74,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             const SizedBox(height: 16),
-
-            // Name
-            const Text(
+            Text(
               "Mahmoud Rashad",
-              style: TextStyle(
-                fontSize: 22,
+              style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.heading,
+                color: theme.colorScheme.onBackground,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               "Entrepreneur",
-              style: TextStyle(color: AppColors.paragraph),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ),
             ),
 
             const SizedBox(height: 30),
 
             // Info cards
-            _infoTile(Icons.person, "First Name", "Mahmoud"),
-            _infoTile(Icons.person_outline, "Last Name", "Diab"),
-            _infoTile(Icons.email, "Email", "mahmoud@example.com"),
-            _infoTile(Icons.phone, "Phone", "+20 103 209 2421"),
+            _infoTile(context, Icons.person, "First Name", "Mahmoud"),
+            _infoTile(context, Icons.person_outline, "Last Name", "Diab"),
+            _infoTile(context, Icons.email, "Email", "mahmoud@example.com"),
+            _infoTile(context, Icons.phone, "Phone", "+20 103 209 2421"),
 
             const SizedBox(height: 25),
 
             // Buttons
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: theme.colorScheme.primary,
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -120,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
-                side: const BorderSide(color: AppColors.primary, width: 1.5),
+                side: BorderSide(color: theme.colorScheme.primary, width: 1.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -131,10 +130,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
               },
-              icon: const Icon(Icons.logout, color: AppColors.primary),
-              label: const Text(
+              icon: Icon(Icons.logout, color: theme.colorScheme.primary),
+              label: Text(
                 "Logout",
-                style: TextStyle(color: AppColors.primary, fontSize: 16),
+                style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
               ),
             ),
           ],
@@ -143,16 +142,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _infoTile(IconData icon, String label, String value) {
+  Widget _infoTile(BuildContext context, IconData icon, String label, String value) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: theme.shadowColor.withOpacity(0.15),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -160,20 +160,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary),
+          Icon(icon, color: theme.colorScheme.primary),
           const SizedBox(width: 14),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 16,
+                style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),

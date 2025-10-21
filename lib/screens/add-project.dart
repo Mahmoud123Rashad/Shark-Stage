@@ -5,8 +5,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import "package:file_picker/file_picker.dart";
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../theme/app_colors.dart';
-
 class Add_project extends StatefulWidget {
   const Add_project({super.key});
 
@@ -23,7 +21,6 @@ class _Add_projectState extends State<Add_project> {
 
   File? _projectImage;
   File? _pdfFile;
-
   String saleType = 'Full';
   bool _isLoading = false;
   final picker = ImagePicker();
@@ -84,9 +81,7 @@ class _Add_projectState extends State<Add_project> {
       final imageRef = FirebaseStorage.instance.ref(
         'projects/${user.uid}/images/${DateTime.now().millisecondsSinceEpoch}.jpg',
       );
-      final imageSnap = await imageRef
-          .putFile(_projectImage!)
-          .whenComplete(() {});
+      final imageSnap = await imageRef.putFile(_projectImage!).whenComplete(() {});
       final imageUrl = await imageSnap.ref.getDownloadURL();
 
       String? pdfUrl;
@@ -123,9 +118,9 @@ class _Add_projectState extends State<Add_project> {
         saleType = 'Full';
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error saving project: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error saving project: $e")),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -134,25 +129,42 @@ class _Add_projectState extends State<Add_project> {
   // UI
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Entrepreneur Dashboard",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.appBarTheme.foregroundColor,
+          ),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
         centerTitle: true,
       ),
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.mainGradient),
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const LinearGradient(
+                  colors: [Color(0xFF121212), Color(0xFF1E1E1E)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [Color(0xFFE3F2FD), Color(0xFFFFFFFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+        ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 100),
           child: Card(
-            color: Colors.white.withOpacity(0.95),
-            elevation: 12,
-            shadowColor: AppColors.shadow,
+            color: theme.cardColor,
+            elevation: 10,
+            shadowColor: theme.shadowColor.withOpacity(0.2),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -163,12 +175,11 @@ class _Add_projectState extends State<Add_project> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       "Add New Project",
-                      style: TextStyle(
-                        fontSize: 24,
+                      style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.heading,
+                        color: theme.colorScheme.primary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -192,25 +203,24 @@ class _Add_projectState extends State<Add_project> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: theme.colorScheme.primary
+                                      .withOpacity(0.3),
                                 ),
-                                color: AppColors.soft,
+                                color: theme.colorScheme.surfaceVariant,
                               ),
-                              child: const Center(
+                              child: Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
                                       Icons.add_a_photo,
-                                      color: AppColors.primary,
+                                      color: theme.colorScheme.primary,
                                       size: 40,
                                     ),
-                                    SizedBox(height: 8),
+                                    const SizedBox(height: 8),
                                     Text(
                                       "Tap to upload project image",
-                                      style: TextStyle(
-                                        color: AppColors.paragraph,
-                                      ),
+                                      style: theme.textTheme.bodyMedium,
                                     ),
                                   ],
                                 ),
@@ -224,12 +234,14 @@ class _Add_projectState extends State<Add_project> {
                       "Project Title",
                       Icons.title,
                       "Enter title",
+                      theme,
                     ),
                     _buildField(
                       _detailsController,
                       "Project Details",
                       Icons.description,
                       "Enter details",
+                      theme,
                       maxLines: 4,
                     ),
                     _buildField(
@@ -237,6 +249,7 @@ class _Add_projectState extends State<Add_project> {
                       "Project Price",
                       Icons.monetization_on,
                       "Enter price",
+                      theme,
                       type: TextInputType.number,
                     ),
                     const SizedBox(height: 12),
@@ -256,17 +269,18 @@ class _Add_projectState extends State<Add_project> {
                       onChanged: (v) => setState(() => saleType = v!),
                       decoration: InputDecoration(
                         labelText: "Sale Type",
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.sell_outlined,
-                          color: AppColors.primary,
+                          color: theme.colorScheme.primary,
                         ),
                         filled: true,
-                        fillColor: AppColors.soft,
+                        fillColor: theme.colorScheme.surfaceVariant,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
+
                     if (saleType == 'Partial')
                       Padding(
                         padding: const EdgeInsets.only(top: 12),
@@ -275,6 +289,7 @@ class _Add_projectState extends State<Add_project> {
                           "Percentage of Project",
                           Icons.percent,
                           "Enter percentage",
+                          theme,
                           type: TextInputType.number,
                         ),
                       ),
@@ -282,50 +297,48 @@ class _Add_projectState extends State<Add_project> {
 
                     ElevatedButton.icon(
                       onPressed: _pickPDF,
-                      icon: const Icon(
-                        Icons.picture_as_pdf,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
+                      icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+                      label: Text(
                         "Upload Project PDF",
-                        style: TextStyle(color: Colors.white),
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: theme.colorScheme.primary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
+
                     if (_pdfFile != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           " ${_pdfFile!.path.split('/').last}",
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.paragraph),
+                          style: theme.textTheme.bodySmall,
                         ),
                       ),
-                    const SizedBox(height: 25),
 
+                    const SizedBox(height: 25),
                     _isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
                             onPressed: _saveProject,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.button,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: theme.colorScheme.secondary,
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              elevation: 6,
                             ),
-                            child: const Text(
+                            child: Text(
                               "Save Project",
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: AppColors.heading,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -340,12 +353,12 @@ class _Add_projectState extends State<Add_project> {
     );
   }
 
-  // Custom field
   Widget _buildField(
     TextEditingController c,
     String label,
     IconData icon,
-    String vMsg, {
+    String vMsg,
+    ThemeData theme, {
     TextInputType type = TextInputType.text,
     int maxLines = 1,
   }) {
@@ -358,10 +371,12 @@ class _Add_projectState extends State<Add_project> {
         validator: (v) => (v == null || v.isEmpty) ? vMsg : null,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: AppColors.primary),
+          prefixIcon: Icon(icon, color: theme.colorScheme.primary),
           filled: true,
-          fillColor: AppColors.soft,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          fillColor: theme.colorScheme.surfaceVariant,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );
