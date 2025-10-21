@@ -73,7 +73,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // صورة البروفايل
             GestureDetector(
               onTap: _pickImage,
               child: CircleAvatar(

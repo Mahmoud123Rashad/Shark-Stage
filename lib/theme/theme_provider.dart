@@ -10,8 +10,6 @@ class ThemeProvider extends ChangeNotifier {
       : _isDarkMode = initialMode == ThemeMode.dark;
 
   ThemeData get currentTheme => _isDarkMode ? _darkTheme : _lightTheme;
-
-  // تبديل الثيم مع حفظه
   Future<void> toggleTheme() async {
     _isDarkMode = !_isDarkMode;
     final prefs = await SharedPreferences.getInstance();
@@ -43,6 +41,8 @@ class ThemeProvider extends ChangeNotifier {
       ),
     ),
   );
+ThemeData get lightTheme => _lightTheme;
+ThemeData get darkTheme => _darkTheme;
 
   //  Dark Theme
   final ThemeData _darkTheme = ThemeData(
@@ -69,3 +69,4 @@ class ThemeProvider extends ChangeNotifier {
     ),
   );
 }
+

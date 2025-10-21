@@ -19,62 +19,111 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-Future<void> _login() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _isLoading = true);
+    setState(() => _isLoading = true);
 
-  try {
-    final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
+    try {
+      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
-    final uid = userCredential.user!.uid;
+      final uid = userCredential.user!.uid;
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (!userDoc.exists) throw Exception("User data not found in Firestore.");
 
-    if (!userDoc.exists) {
-      throw Exception("User data not found in Firestore.");
+      final role = userDoc['role'];
+      if (role == 'Entrepreneur') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const EntrepreneurBottomNavBar()),
+        );
+      } else if (role == 'Investor') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const InvestorBottomNavBar()),
+        );
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Unknown user role")));
+      }
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Login failed: ${e.message}")));
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error: $e")));
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    final role = userDoc['role']; 
-    if (role == 'Entrepreneur') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const EntrepreneurBottomNavBar()), 
-      );
-    } else if (role == 'Investor') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const InvestorBottomNavBar()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unknown user role")),
-      );
-    }
-  } on FirebaseAuthException catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Login failed: ${e.message}")),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Error: $e")),
-    );
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
 
+  Widget _buildTextField({
+    required BuildContext context,
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool isPassword = false,
+    required String validatorMsg,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword,
+      style: TextStyle(color: theme.colorScheme.onBackground),
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: theme.colorScheme.primary),
+        labelText: label,
+        labelStyle: TextStyle(
+          color: isDark ? Colors.white70 : Colors.black87,
+          fontWeight: FontWeight.w500,
+        ),
+        filled: true,
+        fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(
+            color: isDark ? Colors.white24 : Colors.grey.shade400,
+            width: 1.4,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(
+            color: theme.colorScheme.primary,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+        ),
+      ),
+      validator: (value) => (value == null || value.isEmpty) ? validatorMsg : null,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.mainGradient,
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const LinearGradient(
+                  colors: [Color(0xFF0D1117), Color(0xFF1A1F25)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+              : AppColors.mainGradient,
         ),
         child: SafeArea(
           child: Center(
@@ -83,105 +132,85 @@ Future<void> _login() async {
               child: Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.login, size: 90, color: Colors.white),
+                    Icon(
+                      Icons.login,
+                      size: 90,
+                      color: theme.colorScheme.secondary,
+                    ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       "Welcome Back",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 30),
 
-                    // Email
-                    TextFormField(
+                    _buildTextField(
+                      context: context,
                       controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.email_outlined, color: Colors.white),
-                        labelText: "Email",
-                        labelStyle: const TextStyle(color: Colors.white70),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                      validator: (value) =>
-                          value!.isEmpty ? "Enter your email" : null,
+                      label: "Email",
+                      icon: Icons.email_outlined,
+                      validatorMsg: "Enter your email",
                     ),
                     const SizedBox(height: 20),
 
-                    // Password
-                    TextFormField(
+                    _buildTextField(
+                      context: context,
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.lock_outline, color: Colors.white),
-                        labelText: "Password",
-                        labelStyle: const TextStyle(color: Colors.white70),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                      validator: (value) =>
-                          value!.length < 6 ? "Password too short" : null,
+                      label: "Password",
+                      icon: Icons.lock_outline,
+                      isPassword: true,
+                      validatorMsg: "Password must be at least 6 characters",
                     ),
                     const SizedBox(height: 30),
 
-                    // Login Button
                     _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : ElevatedButton(
                             onPressed: _login,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.button,
-                              foregroundColor: AppColors.heading,
+                              foregroundColor: Colors.white,
                               shape: const StadiumBorder(),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 50,
                                 vertical: 16,
                               ),
+                              elevation: 8,
+                              shadowColor: Colors.black54,
                             ),
                             child: const Text(
                               "Login",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           ),
                     const SizedBox(height: 25),
 
-                    // Go to Sign Up
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Don't have an account? ",
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.white,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => SignUpScreen(onToggleTheme: () {  },)),
+                              MaterialPageRoute(
+                                builder: (_) => SignUpScreen(onToggleTheme: () {}),
+                              ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             "Sign Up",
                             style: TextStyle(
-                              color: AppColors.button,
+                              color: theme.colorScheme.secondary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

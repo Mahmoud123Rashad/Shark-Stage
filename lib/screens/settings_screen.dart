@@ -9,57 +9,79 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context); 
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Settings",style: TextStyle(color: Colors.black)),
+        title: Text(
+          "Settings",
+          style: TextStyle(color: Colors.white), 
+        ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
-        
       ),
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.mainGradient),
+        color: theme.scaffoldBackgroundColor,
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            ListTile(
-              leading: const Icon(Icons.color_lens_outlined, color: Colors.white),
-              title: const Text("Theme", style: TextStyle(color: Colors.white)),
-              subtitle: Text(
-                themeProvider.isDarkMode ? "Dark Mode" : "Light Mode",
-                style: const TextStyle(color: Colors.white70),
+            SwitchListTile(
+              title: Text(
+                "Dark Mode",
+                style: theme.textTheme.bodyMedium,
               ),
-              onTap: () {
+              secondary: Icon(
+                Icons.color_lens_outlined,
+                color: theme.iconTheme.color,
+              ),
+              value: themeProvider.isDarkMode,
+              onChanged: (value) {
                 themeProvider.toggleTheme();
               },
+              activeColor: AppColors.button,
+              inactiveThumbColor: Colors.grey,
             ),
-            const Divider(color: Colors.white30),
 
-            const ListTile(
-              leading: Icon(Icons.lock_outline, color: Colors.white),
-              title: Text("Change Password"),
-              subtitle: Text("Update your account password"),
-              textColor: Colors.white,
-            ),
-            const Divider(color: Colors.white30),
-
-            const ListTile(
-              leading: Icon(Icons.info_outline, color: Colors.white),
-              title: Text("About App"),
-              subtitle: Text("Learn more about Shark Stage"),
-              textColor: Colors.white,
-            ),
-            const Divider(color: Colors.white30),
+            const Divider(),
 
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.white),
-              title: const Text("Logout", style: TextStyle(color: Colors.white)),
+              leading: Icon(Icons.lock_outline, color: theme.iconTheme.color),
+              title: Text(
+                "Change Password",
+                style: theme.textTheme.bodyMedium,
+              ),
+              subtitle: Text(
+                "Update your account password",
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+            const Divider(),
+
+            ListTile(
+              leading: Icon(Icons.info_outline, color: theme.iconTheme.color),
+              title: Text(
+                "About App",
+                style: theme.textTheme.bodyMedium,
+              ),
+              subtitle: Text(
+                "Learn more about Shark Stage",
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+            const Divider(),
+
+            ListTile(
+              leading: Icon(Icons.logout, color: theme.iconTheme.color),
+              title: Text(
+                "Logout",
+                style: theme.textTheme.bodyMedium,
+              ),
               onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
                 );
               },
             ),

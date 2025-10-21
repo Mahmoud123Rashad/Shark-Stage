@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import 'intro_entrepreneur.dart';
+import '../theme/app_colors.dart';
 
 class IntroInvestorScreen extends StatefulWidget {
   const IntroInvestorScreen({super.key});
@@ -39,16 +39,26 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.mainGradient),
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const LinearGradient(
+                  colors: [Color(0xFF0A0E21), Color(0xFF1C1F2E)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+              : AppColors.mainGradient,
+        ),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                //  Sniper Image Slider 
                 AnimatedSwitcher(
                   duration: const Duration(seconds: 1),
                   transitionBuilder: (child, animation) => FadeTransition(
@@ -59,20 +69,6 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
                     key: ValueKey(_images[_currentIndex]),
                     width: 330,
                     height: 330,
-                    decoration: BoxDecoration(
-                      // shape: BoxShape.circle,
-                      // border: Border.all(
-                      //   // color: AppColors.button,
-                      //   // width: 4,
-                      // ),
-                    //   boxShadow: [
-                    //     BoxShadow(
-                    //       color: Colors.black.withOpacity(0.3),
-                    //       blurRadius: 15,
-                    //       offset: const Offset(0, 8),
-                    //     ),
-                    //   ],
-                    ),
                     child: ClipOval(
                       child: Stack(
                         fit: StackFit.expand,
@@ -80,8 +76,12 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
                           Image.asset(
                             _images[_currentIndex],
                             fit: BoxFit.cover,
+                            color: isDark
+                                ? Colors.black.withOpacity(0.3)
+                                : null,
+                            colorBlendMode:
+                                isDark ? BlendMode.darken : BlendMode.srcOver,
                           ),
-                          // Crosshair overlay
                           Center(
                             child: Stack(
                               children: [
@@ -90,22 +90,30 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
                                   height: 120,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    // border: Border.all(
-                                    //     color: Colors.white24, width: 1),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.white10
+                                          : Colors.white24,
+                                      width: 1,
+                                    ),
                                   ),
                                 ),
                                 Center(
                                   child: Container(
                                     width: 2,
                                     height: 260,
-                                    color: Colors.white24,
+                                    color: isDark
+                                        ? Colors.white12
+                                        : Colors.white24,
                                   ),
                                 ),
                                 Center(
                                   child: Container(
                                     width: 260,
                                     height: 2,
-                                    color: Colors.white24,
+                                    color: isDark
+                                        ? Colors.white12
+                                        : Colors.white24,
                                   ),
                                 ),
                               ],
@@ -119,20 +127,27 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
 
                 const SizedBox(height: 35),
 
-                const Text(
+                Text(
                   "Investor",
-                  style: TextStyle(
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     color: Colors.white,
-                    fontSize: 32,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
+                    shadows: [
+                      Shadow(
+                        color: isDark
+                            ? Colors.blueAccent.withOpacity(0.4)
+                            : Colors.black38,
+                        blurRadius: 10,
+                      ),
+                    ],
                   ),
                 ),
 
                 const SizedBox(height: 20),
 
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
                     "Discover new ideas and invest in promising projects to be part of their future success.",
                     textAlign: TextAlign.center,
@@ -145,20 +160,20 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
                 ),
 
                 const SizedBox(height: 60),
-
-                // 🔘 Next Button
                 Center(
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.button,
-                      foregroundColor: AppColors.heading,
+                      backgroundColor:
+                          isDark ? Colors.blueAccent : AppColors.button,
+                      foregroundColor: Colors.white,
                       shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 40,
                         vertical: 14,
                       ),
-                      elevation: 6,
-                      shadowColor: Colors.black54,
+                      elevation: 8,
+                      shadowColor:
+                          isDark ? Colors.blueAccent.withOpacity(0.4) : Colors.black54,
                     ),
                     onPressed: () {
                       Navigator.push(
@@ -169,19 +184,13 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
                         ),
                       );
                     },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Next",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_ios, size: 18),
-                      ],
+                    icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                    label: const Text(
+                      "Next",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                 ),

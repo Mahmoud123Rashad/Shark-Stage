@@ -45,29 +45,21 @@ class ProjectDetailsScreen extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(height: 20),
-
-                // Title
                 Text(
                   project['title'],
                   style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 15),
-
-                // Details
                 Text(
                   project['details'],
                   style: const TextStyle(fontSize: 18),
                 ),
                 const SizedBox(height: 15),
-
-                // Price
                 Text(
                   "Price: \$${project['price']}",
                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 15),
-
-                // Sale Type
                 Text(
                   "Sale Type: ${project['saleType']}" +
                       (project['saleType'] == 'Partial'
@@ -76,8 +68,6 @@ class ProjectDetailsScreen extends StatelessWidget {
                   style: const TextStyle(fontSize: 18),
                 ),
                 const SizedBox(height: 15),
-
-                // PDF Document
                 if (project['pdfUrl'] != null && project['pdfUrl'] != '')
                   ElevatedButton(
                     onPressed: () async {
