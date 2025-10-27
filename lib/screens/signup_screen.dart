@@ -1,15 +1,14 @@
+// lib/screens/signup_screen.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../theme/app_colors.dart';
-import '../theme/theme_provider.dart';
-import 'add-project.dart';
-import 'projects_screen.dart';
+import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
+import '../theme/app_colors.dart';
+import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key, required Null Function() onToggleTheme});
+  const SignUpScreen({super.key});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -17,359 +16,237 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? selectedRole;
   bool _isLoading = false;
 
+  final String baseUrl = "https://sharkserver-production.up.railway.app";
+
+  Future<void> _saveUserLocally({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String accountType,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("firstName", firstName);
+    await prefs.setString("lastName", lastName);
+    await prefs.setString("email", email);
+    await prefs.setString("accountType", accountType);
+  }
+
   Future<void> _signUpWithEmail() async {
     if (!_formKey.currentState!.validate()) return;
     if (selectedRole == null) {
-      _showSnack("Please select your role");
+      _showSnack("Please select your account type");
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
-          );
+      final url = Uri.parse("$baseUrl/auth/signup");
 
-      final user = userCredential.user;
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "firstName": _firstNameController.text.trim(),
+          "lastName": _lastNameController.text.trim(),
+          "email": _emailController.text.trim(),
+          "password": _passwordController.text.trim(),
+          "accountType": selectedRole!.toLowerCase(),
+        }),
+      );
 
-      await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
-        'email': _emailController.text.trim(),
-        'role': selectedRole,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      dynamic data;
+      try {
+        data = jsonDecode(response.body);
+      } catch (_) {
+        data = {"message": response.body};
+      }
 
-      _showSnack("Account created successfully");
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await _saveUserLocally(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          email: _emailController.text.trim(),
+          accountType: selectedRole!.toLowerCase(),
+        );
 
-      if (selectedRole == 'Entrepreneur') {
+        _showSnack(data["message"] ?? "Account created successfully ");
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const Add_project()),
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ProjectsScreen()),
-        );
+        _showSnack(" ${data['message'] ?? 'Error ${response.statusCode}'}");
       }
-    } on FirebaseAuthException catch (e) {
-      _showSnack("Error: ${e.message}");
+    } catch (e) {
+      _showSnack(" Failed to connect to server: $e");
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
-        _showSnack("Sign-in cancelled");
+        setState(() => _isLoading = false);
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-        accessToken: googleAuth.accessToken,
+      final email = googleUser.email;
+      final name = googleUser.displayName ?? "";
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/google-signin"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email,
+          "name": name,
+          "accountType": selectedRole?.toLowerCase() ?? "owner",
+        }),
       );
 
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(
-        credential,
-      );
-      final user = userCredential.user;
+      final data = jsonDecode(response.body);
 
-      final userDoc = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.uid);
-      final snapshot = await userDoc.get();
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          data['success'] == true) {
+        final nameParts = name.split(' ');
+        await _saveUserLocally(
+          firstName: nameParts.isNotEmpty ? nameParts.first : "",
+          lastName: nameParts.length > 1 ? nameParts.last : "",
+          email: email,
+          accountType: selectedRole?.toLowerCase() ?? "owner",
+        );
 
-      String role;
-      if (!snapshot.exists) {
-        role = await _selectRoleDialog();
-        await userDoc.set({
-          'email': user.email,
-          'role': role,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      } else {
-        role = snapshot['role'];
-      }
-
-      if (role == 'Entrepreneur') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const Add_project()),
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ProjectsScreen()),
-        );
+        _showSnack(data['message'] ?? "Google login failed");
       }
-
-      _showSnack("Signed in with Google");
     } catch (e) {
-      _showSnack("Google Sign-In failed: $e");
+      _showSnack("Error: $e");
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
-  Future<String> _selectRoleDialog() async {
-    String selected = "Investor";
-    return await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Select your role"),
-          content: StatefulBuilder(
-            builder: (context, setState) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RadioListTile<String>(
-                  title: const Text("Entrepreneur"),
-                  value: "Entrepreneur",
-                  groupValue: selected,
-                  onChanged: (value) => setState(() => selected = value!),
-                ),
-                RadioListTile<String>(
-                  title: const Text("Investor"),
-                  value: "Investor",
-                  groupValue: selected,
-                  onChanged: (value) => setState(() => selected = value!),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(selected),
-              child: const Text("OK"),
-            ),
-          ],
+  Future<void> _signInWithLinkedIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final email = "linkedinuser@example.com";
+      final name = "LinkedIn User";
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/linkedin-signin"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email,
+          "name": name,
+          "accountType": selectedRole?.toLowerCase() ?? "owner",
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          data['success'] == true) {
+        final nameParts = name.split(' ');
+        await _saveUserLocally(
+          firstName: nameParts.isNotEmpty ? nameParts.first : "",
+          lastName: nameParts.length > 1 ? nameParts.last : "",
+          email: email,
+          accountType: selectedRole?.toLowerCase() ?? "owner",
         );
-      },
-    );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      } else {
+        _showSnack(data['message'] ?? "LinkedIn login failed");
+      }
+    } catch (e) {
+      _showSnack("Error: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+        backgroundColor: AppColors.button.withOpacity(0.95),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final gradient = const LinearGradient(
+      colors: [Color(0xFF0D1117), Color(0xFF12151A)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+
+    final panelColor = Colors.white.withOpacity(0.06);
+    final inputFill = Colors.white.withOpacity(0.03);
+    final labelStyle = const TextStyle(color: Colors.white70);
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Sign Up"),
-        flexibleSpace: isDark
-            ? Container(color: const Color(0xFF1E1E1E))
-            : Container(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.mainGradient,
-                ),
-              ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              themeProvider.isDarkMode
-                  ? Icons.wb_sunny
-                  : Icons.nightlight_round,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              themeProvider.toggleTheme();
-            },
-          ),
-        ],
+        title: const Text('Sign Up'),
+        centerTitle: true,
       ),
+      extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: isDark
-              ? const LinearGradient(
-                  colors: [Color(0xFF0D1117), Color(0xFF1A1F25)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                )
-              : AppColors.mainGradient,
-        ),
+        decoration: BoxDecoration(gradient: gradient),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.person_add_alt_1,
-                    size: 90,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.soft, width: 2),
+                    image: const DecorationImage(
+                      image: AssetImage('images/Logo.jpeg'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  "Create Your Account",
+                  style: TextStyle(
                     color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 15),
-                  const Text(
-                    "Create Your Account",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildTextField(
-                          context,
-                          controller: _emailController,
-                          label: "Email",
-                          icon: Icons.email_outlined,
-                          validatorMsg: "Enter your email",
-                        ),
-                        const SizedBox(height: 20),
-                        _buildTextField(
-                          context,
-                          controller: _passwordController,
-                          label: "Password",
-                          icon: Icons.lock_outline,
-                          isPassword: true,
-                          validatorMsg:
-                              "Password must be at least 6 characters",
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "I am a...",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        ToggleButtons(
-                          isSelected: [
-                            selectedRole == "Entrepreneur",
-                            selectedRole == "Investor",
-                          ],
-                          borderRadius: BorderRadius.circular(12),
-                          fillColor: Colors.white,
-                          selectedColor: AppColors.button,
-                          color: Colors.white70,
-                          onPressed: (index) {
-                            setState(() {
-                              selectedRole = index == 0
-                                  ? "Entrepreneur"
-                                  : "Investor";
-                            });
-                          },
-                          children: const [
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                              child: Text(
-                                "Presence owner",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                              child: Text(
-                                "Investor",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : ElevatedButton(
-                          onPressed: _signUpWithEmail,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.button,
-                            foregroundColor: Colors.white,
-                            shape: const StadiumBorder(),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 50,
-                              vertical: 16,
-                            ),
-                          ),
-                          child: const Text(
-                            "Sign Up",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                  const SizedBox(height: 25),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _socialButton(
-                        context,
-                        'images/6.webp',
-                        _signInWithGoogle,
-                      ),
-                      const SizedBox(width: 20),
-                      _socialButton(context, 'images/7.webp', () {}),
-                    ],
-                  ),
-                  const SizedBox(height: 25),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
-                        "Already have an account? ",
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      Text(
-                        "Login",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 12),
+                Text("Sign up to access your dashboard", style: labelStyle),
+                const SizedBox(height: 26),
+                _buildForm(panelColor, inputFill, labelStyle),
+              ],
             ),
           ),
         ),
@@ -377,61 +254,174 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildTextField(
-    BuildContext context, {
-    required TextEditingController controller,
-    required String label,
+  Widget _buildForm(Color panelColor, Color inputFill, TextStyle labelStyle) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: panelColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _buildInputField(
+              icon: Icons.person,
+              label: "First Name",
+              controller: _firstNameController,
+              validatorMsg: "Please enter your first name",
+              fillColor: inputFill,
+              labelStyle: labelStyle,
+            ),
+            const SizedBox(height: 14),
+            _buildInputField(
+              icon: Icons.person_outline,
+              label: "Last Name",
+              controller: _lastNameController,
+              validatorMsg: "Please enter your last name",
+              fillColor: inputFill,
+              labelStyle: labelStyle,
+            ),
+            const SizedBox(height: 14),
+            _buildInputField(
+              icon: Icons.email_rounded,
+              label: "Email",
+              controller: _emailController,
+              validatorMsg: "Please enter your email",
+              fillColor: inputFill,
+              labelStyle: labelStyle,
+            ),
+            const SizedBox(height: 14),
+            _buildInputField(
+              icon: Icons.lock_rounded,
+              label: "Password",
+              controller: _passwordController,
+              isPassword: true,
+              validatorMsg: "Password must be at least 6 characters",
+              fillColor: inputFill,
+              labelStyle: labelStyle,
+            ),
+            const SizedBox(height: 18),
+            Align(alignment: Alignment.centerLeft, child: Text("Account Type", style: labelStyle)),
+            const SizedBox(height: 8),
+            ToggleButtons(
+              isSelected: [selectedRole == "owner", selectedRole == "investor"],
+              borderRadius: BorderRadius.circular(12),
+              fillColor: AppColors.button.withOpacity(0.18),
+              selectedColor: AppColors.button,
+              color: Colors.white70,
+              onPressed: (index) {
+                setState(() {
+                  selectedRole = index == 0 ? "owner" : "investor";
+                });
+              },
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  child: Text("Owner"),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  child: Text("Investor"),
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            _isLoading
+                ? const CircularProgressIndicator()
+                : Column(
+                    children: [
+                      _buildButton("Sign Up", _signUpWithEmail),
+                      const SizedBox(height: 16),
+                      _buildSocialButton(
+                        "Sign up with Google",
+                        "https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png",
+                        _signInWithGoogle,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildSocialButton(
+                        "Sign up with LinkedIn",
+                        "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png",
+                        _signInWithLinkedIn,
+                      ),
+                    ],
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton(String text, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.button,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        onPressed: onPressed,
+        child: Text(text,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton(String text, String logoUrl, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.network(logoUrl, width: 24, height: 24),
+            const SizedBox(width: 12),
+            Text(text,
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
     required IconData icon,
-    required String validatorMsg,
+    required String label,
+    required TextEditingController controller,
     bool isPassword = false,
+    required String validatorMsg,
+    required Color fillColor,
+    required TextStyle labelStyle,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.white),
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.3),
-            width: 1.5,
-          ),
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
-          borderSide: BorderSide(color: Colors.white, width: 2),
-        ),
-      ),
+      validator: (v) => (v == null || v.isEmpty) ? validatorMsg : null,
       style: const TextStyle(color: Colors.white),
-      validator: (value) =>
-          (value == null || value.isEmpty) ? validatorMsg : null,
-    );
-  }
-
-  Widget _socialButton(BuildContext context, String image, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(50),
-      child: Container(
-        width: 65,
-        height: 65,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: Colors.white70),
+        labelText: label,
+        labelStyle: labelStyle,
+        filled: true,
+        fillColor: fillColor,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.06)),
         ),
-        child: Image.asset(image),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.button),
+        ),
       ),
     );
   }

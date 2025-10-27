@@ -41,9 +41,13 @@ class ProjectsScreen extends StatelessWidget {
                   end: Alignment.bottomRight,
                 )
               : const LinearGradient(
-                  colors: [Color(0xFF6A5AE0), Color(0xFF8F8AE6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.fromARGB(255, 42, 147, 238),
+                    Color.fromARGB(255, 74, 177, 246),
+                    Color.fromARGB(255, 145, 207, 234),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
         ),
         child: ListView.builder(
@@ -91,8 +95,9 @@ class ProjectsScreen extends StatelessWidget {
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 16,
                         height: 1.4,
-                        color: theme.textTheme.bodyMedium?.color
-                            ?.withOpacity(0.8),
+                        color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                          0.8,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -105,35 +110,38 @@ class ProjectsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                   Align(
-  alignment: Alignment.centerRight,
-  child: ElevatedButton(
-    onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProjectDetailsScreen(
-            projectId: 'project_${index + 1}',
-          ),
-        ),
-      );
-    },
-    style: ElevatedButton.styleFrom(
-      backgroundColor: theme.colorScheme.primary,
-      foregroundColor: Colors.white,
-      shape: const StadiumBorder(),
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: const [
-        Text("View Full Project"),
-        SizedBox(width: 8),
-        Icon(Icons.arrow_forward_ios, size: 16),
-      ],
-    ),
-  ),
-)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProjectDetailsScreen(
+                                projectId: 'project_${index + 1}',
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          shape: const StadiumBorder(),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 25,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Text("View Full Project"),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward_ios, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

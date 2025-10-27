@@ -7,7 +7,9 @@ import 'profile_screen.dart';
 import 'settings_screen.dart';
 
 class EntrepreneurBottomNavBar extends StatefulWidget {
-  const EntrepreneurBottomNavBar({super.key});
+  final String email; // ضيفنا الإيميل هنا
+
+  const EntrepreneurBottomNavBar({super.key, required this.email});
 
   @override
   State<EntrepreneurBottomNavBar> createState() => _EntrepreneurBottomNavBarState();
@@ -16,13 +18,20 @@ class EntrepreneurBottomNavBar extends StatefulWidget {
 class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
-    ProjectsScreen(),
-    EntrepreneurDashboard(),
-    Add_project(),
-    ProfileScreen(),
-    SettingsScreen(),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    // نمرر الإيميل للبروفايل
+    _pages = [
+      const ProjectsScreen(),
+      const EntrepreneurDashboard(),
+      const Add_project(),
+      ProfileScreen(email: '',),
+      const SettingsScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
