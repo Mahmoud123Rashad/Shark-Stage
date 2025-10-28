@@ -11,7 +11,7 @@ class EditProfileScreen extends StatefulWidget {
   final String lastName;
   final String email;
   final String phone;
-  final File? image;
+  final String? imageUrl;
 
   const EditProfileScreen({
     super.key,
@@ -19,7 +19,7 @@ class EditProfileScreen extends StatefulWidget {
     required this.lastName,
     required this.email,
     required this.phone,
-    this.image,
+    this.imageUrl,
   });
 
   @override
@@ -34,7 +34,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   File? _selectedImage;
   bool _isLoading = false;
 
-  final String baseUrl = "https://sharkserver-production.up.railway.app";
+  final String baseUrl ="https://sharkserver-production.up.railway.app";
 
   @override
   void initState() {
@@ -43,7 +43,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _lastNameController = TextEditingController(text: widget.lastName);
     _emailController = TextEditingController(text: widget.email);
     _phoneController = TextEditingController(text: widget.phone);
-    _selectedImage = widget.image;
   }
 
   Future<void> _pickImage() async {
@@ -65,12 +64,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         return;
       }
 
-      final uri = Uri.parse("$baseUrl/auth/update");
+      final uri = Uri.parse("$baseUrl/auth/update"); // المسار الصحيح
       var request = http.MultipartRequest('PUT', uri);
 
       request.fields['firstName'] = _firstNameController.text.trim();
       request.fields['lastName'] = _lastNameController.text.trim();
-      request.fields['email'] = _emailController.text.trim();
       request.fields['phone'] = _phoneController.text.trim();
 
       if (_selectedImage != null) {
@@ -85,33 +83,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      debugPrint("Update Status: ${response.statusCode}");
-      debugPrint("Response: ${response.body}");
+      debugPrint("📡 Update Status: ${response.statusCode}");
+      debugPrint("🧾 Response: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final updatedUser = data['user'] ?? data;
+        final updatedUser = data['user'] ?? {};
 
         await prefs.setString('firstName', updatedUser['firstName'] ?? '');
         await prefs.setString('lastName', updatedUser['lastName'] ?? '');
-        await prefs.setString('email', updatedUser['email'] ?? '');
         await prefs.setString('phone', updatedUser['phone'] ?? '');
 
         Navigator.pop(context, {
           'firstName': updatedUser['firstName'],
           'lastName': updatedUser['lastName'],
-          'email': updatedUser['email'],
           'phone': updatedUser['phone'],
           'image': _selectedImage,
         });
 
-        _showSnack("Profile updated successfully");
+        _showSnack("✅ Profile updated successfully");
       } else {
         final data = jsonDecode(response.body);
-        _showSnack(data['message'] ?? "Failed to update profile");
+        _showSnack(data['message'] ?? "❌ Failed to update profile");
       }
     } catch (e) {
-      debugPrint("Error updating profile: $e");
+      debugPrint("⚠️ Error updating profile: $e");
       _showSnack("Error occurred while updating profile");
     } finally {
       setState(() => _isLoading = false);
@@ -189,7 +185,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       radius: 65,
                       backgroundImage: _selectedImage != null
                           ? FileImage(_selectedImage!)
-                          : const AssetImage('images/profile.jpeg') as ImageProvider,
+                          : (widget.imageUrl != null
+                              ? NetworkImage(widget.imageUrl!) as ImageProvider
+                              : const AssetImage('images/profile.jpeg')),
                     ),
                     Positioned(
                       bottom: 0,
@@ -202,7 +200,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             shape: BoxShape.circle,
                             color: AppColors.button,
                           ),
-                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                          child: const Icon(Icons.camera_alt,
+                              color: Colors.white, size: 20),
                         ),
                       ),
                     ),
