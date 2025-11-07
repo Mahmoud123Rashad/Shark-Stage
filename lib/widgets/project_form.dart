@@ -9,7 +9,15 @@ class ProjectForm extends StatefulWidget {
 }
 
 class _ProjectFormState extends State<ProjectForm> {
+  // يجب تعريف الـ controller كـ final
   final _controller = ProjectController();
+
+  // دالة لتحديث حالة الـ Form (تستخدم لإعادة بناء الـ Widget بعد أي تغيير في الـ Controller)
+  void _updateFormState([String? newValue]) {
+    setState(() {
+      // لا تحتاج إلى فعل أي شيء داخل setState()، فقط استدعاؤها هو ما يهم.
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,20 +34,31 @@ class _ProjectFormState extends State<ProjectForm> {
 
           const SizedBox(height: 20),
 
-          _controller.buildImagePicker(context),
+          // تمرير دالة تحديث الحالة
+          _controller.buildImagePicker(context, _updateFormState),
+          
           _controller.buildTextField("Project Title", _controller.titleController),
-          _controller.buildTextField("Details", _controller.detailsController,
+          _controller.buildTextField("Short Description", _controller.shortDescController),
+          
+          _controller.buildTextField("Details (Full Description)", _controller.detailsController,
               maxLines: 4),
           _controller.buildTextField("Price", _controller.priceController,
               type: TextInputType.number),
 
           const SizedBox(height: 12),
 
-          _controller.buildSaleTypeDropdown(context),
+          // تحديث الـ Dropdown مع دالة التحديث
+          _controller.buildSaleTypeDropdown(context, _updateFormState),
 
           const SizedBox(height: 12),
 
-          _controller.buildPdfUploader(context),
+          // شرط ظهور حقل النسبة المئوية
+          if (_controller.saleType.value == 'Partial') 
+            _controller.buildTextField("Available Percentage (%)", _controller.percentageController,
+                type: TextInputType.number),
+          
+          // تمرير دالة تحديث الحالة
+          _controller.buildPdfUploader(context, _updateFormState),
 
           const SizedBox(height: 20),
 
