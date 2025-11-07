@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:finial_project/screens/chat_bot_screen.dart';
+import '../chatbot/chatbot_screen.dart';
 import 'project_list.dart';
 
 class ProjectsScreen extends StatefulWidget {

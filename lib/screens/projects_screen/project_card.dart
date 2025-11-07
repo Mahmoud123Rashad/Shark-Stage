@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../project_details_screen.dart';
-
+import '../project_details/project_details_screen.dart';
 class ProjectCard extends StatelessWidget {
   final Map<String, dynamic> project;
 

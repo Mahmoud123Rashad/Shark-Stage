@@ -1,7 +1,7 @@
 import 'package:finial_project/screens/add-project.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'entrepreneur_dashboard.dart';
+import 'entrepreneur_dashboard/entrepreneur_dashboard.dart';
 import 'profile/profile_screen.dart';
 import 'projects_screen/projects_screen.dart';
 import 'settings_screen/settings_screen.dart';

@@ -1,11 +1,10 @@
-// lib/screens/profile/profile_body.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_colors.dart';
-import '../edit_profile_screen.dart';
+import '../edit_profile/edit_profile_screen.dart';
 import 'profile_info_card.dart';
 import 'profile_service.dart';
 
