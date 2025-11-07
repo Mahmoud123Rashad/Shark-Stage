@@ -2,9 +2,9 @@ import 'package:finial_project/screens/add-project.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'entrepreneur_dashboard.dart';
-import 'projects_screen.dart';
-import 'profile_screen.dart';
-import 'settings_screen.dart';
+import 'profile/profile_screen.dart';
+import 'projects_screen/projects_screen.dart';
+import 'settings_screen/settings_screen.dart';
 
 class EntrepreneurBottomNavBar extends StatefulWidget {
   final String email; // ضيفنا الإيميل هنا
@@ -23,11 +23,10 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
   @override
   void initState() {
     super.initState();
-    // نمرر الإيميل للبروفايل
     _pages = [
       const ProjectsScreen(),
       const EntrepreneurDashboard(),
-      const Add_project(),
+       AddProjectScreen(),
       ProfileScreen(email: '',),
       const SettingsScreen(),
     ];

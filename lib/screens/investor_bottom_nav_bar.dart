@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'projects_screen.dart';
 import 'investor_dashboard.dart';
-import 'profile_screen.dart';
-import 'settings_screen.dart';
+import 'profile/profile_screen.dart';
+import 'projects_screen/projects_screen.dart';
+import 'settings_screen/settings_screen.dart';
 
 class InvestorBottomNavBar extends StatefulWidget {
   final String email; // استلام الإيميل من صفحة اللوجن

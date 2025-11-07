@@ -1,95 +1,161 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 import '../theme/app_colors.dart';
 
-class ProjectDetailsScreen extends StatelessWidget {
+class ProjectDetailsScreen extends StatefulWidget {
   final String projectId;
   const ProjectDetailsScreen({super.key, required this.projectId});
 
   @override
+  State<ProjectDetailsScreen> createState() => _ProjectDetailsScreenState();
+}
+
+class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
+  final String baseUrl = "https://sharkserver-production.up.railway.app";
+  Map<String, dynamic>? _project;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProjectDetails();
+  }
+
+  Future<void> fetchProjectDetails() async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/projects/${widget.projectId}"));
+      debugPrint(" GET /projects/${widget.projectId} => ${response.statusCode}");
+      debugPrint(response.body);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _project = data["project"] ?? data;
+          _isLoading = false;
+        });
+      } else {
+        throw Exception("Failed to load project details");
+      }
+    } catch (e) {
+      debugPrint("❌ Error fetching project details: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final project = _project;
     return Scaffold(
       appBar: AppBar(
         title: const Text("Project Details"),
         backgroundColor: AppColors.button,
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('projects')
-            .doc(projectId)
-            .get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text("Project not found."));
-          }
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : project == null
+              ? const Center(child: Text("Project not found"))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (project["images"] != null &&
+                          project["images"].isNotEmpty)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            project["images"][0],
+                            height: 250,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      const SizedBox(height: 20),
 
-          final project = snapshot.data!;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Image
-                if (project['imageUrl'] != null && project['imageUrl'] != '')
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      project['imageUrl'],
-                      height: 250,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
+                      Text(
+                        project["title"] ?? "Untitled Project",
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+
+                      Text(
+                        project["description"] ?? "No description available",
+                        style: const TextStyle(fontSize: 18, height: 1.5),
+                      ),
+                      const SizedBox(height: 15),
+
+                      Text(
+                        "Category: ${project["category"] ?? "N/A"}",
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 10),
+
+                      Text(
+                        "Total Price: \$${project["totalPrice"] ?? 0}",
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      Text(
+                        "Expected ROI: ${project["expectedROI"] ?? 0}%",
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 10),
+
+                      Text(
+                        "Status: ${project["status"] ?? "Unknown"}",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.greenAccent,
+                        ),
+                      ),
+                      const SizedBox(height: 25),
+
+                      if (project["keyBenefits"] != null &&
+                          project["keyBenefits"].isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Key Benefits:",
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            ...project["keyBenefits"]
+                                .map<Widget>((b) => Text("• $b"))
+                                .toList(),
+                          ],
+                        ),
+
+                      const SizedBox(height: 20),
+
+                      if (project["potentialRisks"] != null &&
+                          project["potentialRisks"].isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Potential Risks:",
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            ...project["potentialRisks"]
+                                .map<Widget>((r) => Text("• $r"))
+                                .toList(),
+                          ],
+                        ),
+                    ],
                   ),
-                const SizedBox(height: 20),
-                Text(
-                  project['title'],
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 15),
-                Text(
-                  project['details'],
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 15),
-                Text(
-                  "Price: \$${project['price']}",
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 15),
-                Text(
-                  "Sale Type: ${project['saleType']}" +
-                      (project['saleType'] == 'Partial'
-                          ? " (${project['percentage']}%)"
-                          : ""),
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 15),
-                if (project['pdfUrl'] != null && project['pdfUrl'] != '')
-                  ElevatedButton(
-                    onPressed: () async {
-                      final url = project['pdfUrl'];
-                      if (await canLaunch(url)) {
-                        await launch(url);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Cannot open PDF")),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.button,
-                    ),
-                    child: const Text("View Project PDF"),
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 }
