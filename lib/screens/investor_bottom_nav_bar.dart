@@ -25,7 +25,7 @@ class _InvestorBottomNavBarState extends State<InvestorBottomNavBar> {
 
     _pages = [
       ProjectsScreen(),
-      InvestorDashboard(),
+      InvestorDashboard(email:'' ),
       ProfileScreen(email: '',),
       SettingsScreen(),
     ];

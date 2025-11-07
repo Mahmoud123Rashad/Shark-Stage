@@ -26,7 +26,7 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
     // نمرر الإيميل للبروفايل
     _pages = [
       const ProjectsScreen(),
-      const EntrepreneurDashboard(),
+EntrepreneurDashboard(email: widget.email),
       const Add_project(),
       ProfileScreen(email: '',),
       const SettingsScreen(),

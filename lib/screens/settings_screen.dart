@@ -1,3 +1,4 @@
+import 'package:finial_project/screens/changepassword.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
@@ -46,17 +47,25 @@ class SettingsScreen extends StatelessWidget {
 
             const Divider(),
 
-            ListTile(
-              leading: Icon(Icons.lock_outline, color: theme.iconTheme.color),
-              title: Text(
-                "Change Password",
-                style: theme.textTheme.bodyMedium,
-              ),
-              subtitle: Text(
-                "Update your account password",
-                style: theme.textTheme.bodySmall,
-              ),
-            ),
+ListTile(
+  leading: Icon(Icons.lock_outline, color: theme.iconTheme.color),
+  title: Text(
+    "Change Password",
+    style: theme.textTheme.bodyMedium,
+  ),
+  subtitle: Text(
+    "Update your account password",
+    style: theme.textTheme.bodySmall,
+  ),
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+    );
+  },
+),
+
+
             const Divider(),
 
             ListTile(

@@ -1,7 +1,58 @@
+import 'dart:convert';
+import 'package:finial_project/screens/projects_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-class EntrepreneurDashboard extends StatelessWidget {
-  const EntrepreneurDashboard({super.key});
+class EntrepreneurDashboard extends StatefulWidget {
+  final String email; // ✅ استقبل الإيميل من المستخدم
+
+  const EntrepreneurDashboard({super.key, required this.email});
+
+  @override
+  State<EntrepreneurDashboard> createState() => _EntrepreneurDashboardState();
+
+  void onTabChanged(int i) {
+    i--;
+  }
+}
+
+class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
+  bool _isLoading = true;
+  Map<String, dynamic>? _userData;
+  List<dynamic> _projects = [];
+
+  final String baseUrl = "https://sharkserver-production.up.railway.app";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserDashboard();
+  }
+
+  Future<void> _fetchUserDashboard() async {
+    try {
+      final uri = Uri.parse(
+        "$baseUrl/auth/getUserByEmail?email=${widget.email}",
+      );
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        setState(() {
+          _userData = data['user'] ?? {};
+          _projects = data['projects'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+        debugPrint("Failed to load dashboard data");
+      }
+    } catch (e) {
+      debugPrint("Error fetching dashboard data: $e");
+      setState(() => _isLoading = false);
+    }
+  }
 
   Widget _statCard(
     BuildContext context,
@@ -112,9 +163,29 @@ class EntrepreneurDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final name =
+        "${_userData?['firstName'] ?? ''} ${_userData?['lastName'] ?? ''}";
+    final projectsCount = _projects.length.toString();
+    final earnings = _userData?['earnings']?.toString() ?? "₤ 0";
+    final orders = _userData?['orders']?.toString() ?? "0";
+    final clients = _userData?['clients']?.toString() ?? "0";
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            // غير التاب الحالي إلى صفحة المشاريع
+            // Navigator.pop(context); // لو داخل ب push
+            // أو لو dashboard داخل bottom nav مباشرة
+            // widget.onTabChanged(0);
+          },
+        ),
         title: Text(
           "Entrepreneur Dashboard",
           style: theme.textTheme.titleLarge?.copyWith(
@@ -124,15 +195,16 @@ class EntrepreneurDashboard extends StatelessWidget {
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: theme.appBarTheme.backgroundColor,
+        backgroundColor: theme.appBarTheme.backgroundColor ?? Colors.black87,
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Welcome... ",
+              "Welcome, $name 👋",
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -145,18 +217,38 @@ class EntrepreneurDashboard extends StatelessWidget {
             const SizedBox(height: 20),
             Row(
               children: [
-                _statCard(context, "Projects", "12",
-                    Icons.business_center, Colors.deepPurple),
-                _statCard(context, "Earnings", "₤ 8,420",
-                    Icons.attach_money, Colors.green),
+                _statCard(
+                  context,
+                  "Projects",
+                  projectsCount,
+                  Icons.business_center,
+                  Colors.deepPurple,
+                ),
+                _statCard(
+                  context,
+                  "Earnings",
+                  earnings,
+                  Icons.attach_money,
+                  Colors.green,
+                ),
               ],
             ),
             Row(
               children: [
-                _statCard(context, "New Orders", "5",
-                    Icons.shopping_cart, Colors.orange),
-                _statCard(context, "Clients", "32",
-                    Icons.people_alt, Colors.teal),
+                _statCard(
+                  context,
+                  "Orders",
+                  orders,
+                  Icons.shopping_cart,
+                  Colors.orange,
+                ),
+                _statCard(
+                  context,
+                  "Clients",
+                  clients,
+                  Icons.people_alt,
+                  Colors.teal,
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -167,12 +259,17 @@ class EntrepreneurDashboard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            _projectCard(
-                context, "Project Management App", "In Progress", 0.7),
-            _projectCard(context, "Smart Store Platform",
-                "Under Development", 0.4),
-            _projectCard(context, "Order Tracking System",
-                "Completed", 1.0),
+            if (_projects.isEmpty)
+              const Center(child: Text("No projects found"))
+            else
+              ..._projects.map(
+                (p) => _projectCard(
+                  context,
+                  p['name'] ?? 'Unnamed Project',
+                  p['status'] ?? 'Unknown',
+                  (p['progress'] ?? 0.0).toDouble(),
+                ),
+              ),
           ],
         ),
       ),

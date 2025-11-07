@@ -1,28 +1,39 @@
 import 'package:flutter/material.dart';
+
 class InvestorDashboard extends StatelessWidget {
-  const InvestorDashboard({super.key});
+  final String email; // ✅ نضيف الإيميل هنا
+
+  const InvestorDashboard({super.key, required this.email});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: colorScheme.primary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context); // ✅ يرجع خطوة للخلف
+          },
+        ),
         title: Text(
           "Investor Dashboard",
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: CircleAvatar(
               backgroundColor: colorScheme.secondary,
-              child: Icon(Icons.person, color: colorScheme.onSecondary),
+              child: const Icon(Icons.person, color: Colors.white),
             ),
           ),
         ],
@@ -33,6 +44,16 @@ class InvestorDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ✅ عرض الإيميل في الأعلى كمعلومة للمستخدم
+            Text(
+              "Welcome, $email",
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // --- Statistics Cards ---
             Row(
               children: [
@@ -122,6 +143,8 @@ class InvestorDashboard extends StatelessWidget {
       ),
     );
   }
+
+  // ---------- Widgets ----------
 
   Widget _statCard(
     BuildContext context,

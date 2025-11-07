@@ -47,9 +47,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if ((response.statusCode == 200 || response.statusCode == 201) &&
           data['success'] == true) {
+        // ✅ خزن الـ token في SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-        if (data['token'] != null)
+        if (data['token'] != null) {
           await prefs.setString('token', data['token']);
+          debugPrint("✅ Token saved successfully: ${data['token']}");
+        } else {
+          debugPrint("⚠️ No token received from server!");
+        }
+
+        // ✅ حفظ نوع الحساب والإيميل (اختياري)
+        if (data['user'] != null) {
+          await prefs.setString('email', data['user']['email'] ?? '');
+          await prefs.setString('accountType', data['user']['accountType'] ?? '');
+        }
 
         final role = data['user']?['accountType']?.toLowerCase();
         final email = _emailController.text.trim();
@@ -69,13 +80,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         } else {
-          _showSnack(" Unknown user role");
+          _showSnack("Unknown user role");
         }
       } else {
-        _showSnack(data['message'] ?? " Login failed");
+        _showSnack(data['message'] ?? "Login failed");
       }
     } catch (e) {
-      _showSnack(" Error: $e");
+      _showSnack("Error: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -101,11 +112,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
-      validator: (v) => (v == null || v.isEmpty)
-          ? (isPassword
-                ? "Password must be at least 6 characters"
-                : "Enter your email")
-          : null,
+      validator: (v) {
+        if (v == null || v.isEmpty) {
+          return isPassword
+              ? "Password must be at least 6 characters"
+              : "Enter your email";
+        }
+        return null;
+      },
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.white70),

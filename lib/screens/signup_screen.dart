@@ -30,12 +30,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     required String lastName,
     required String email,
     required String accountType,
+    required String token, // جديد: نخزن التوكن
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("firstName", firstName);
     await prefs.setString("lastName", lastName);
     await prefs.setString("email", email);
     await prefs.setString("accountType", accountType);
+    await prefs.setString("token", token); // <-- خزّن التوكن هنا
   }
 
   Future<void> _signUpWithEmail() async {
@@ -70,11 +72,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final token = data['token'] ?? ""; // تأكد أن السيرفر بيرجع token
+        if (token.isEmpty) {
+          _showSnack("Token not returned from server", color: Colors.red);
+          setState(() => _isLoading = false);
+          return;
+        }
+
         await _saveUserLocally(
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           email: _emailController.text.trim(),
           accountType: selectedRole!.toLowerCase(),
+          token: token,
         );
 
         _showSnack(data["message"] ?? "Account created successfully ");
@@ -118,12 +128,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       if ((response.statusCode == 200 || response.statusCode == 201) &&
           data['success'] == true) {
+        final token = data['token'] ?? "";
+        if (token.isEmpty) {
+          _showSnack("Token not returned from server", color: Colors.red);
+          setState(() => _isLoading = false);
+          return;
+        }
+
         final nameParts = name.split(' ');
         await _saveUserLocally(
           firstName: nameParts.isNotEmpty ? nameParts.first : "",
           lastName: nameParts.length > 1 ? nameParts.last : "",
           email: email,
           accountType: selectedRole?.toLowerCase() ?? "owner",
+          token: token,
         );
 
         Navigator.pushReplacement(
@@ -160,12 +178,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       if ((response.statusCode == 200 || response.statusCode == 201) &&
           data['success'] == true) {
+        final token = data['token'] ?? "";
+        if (token.isEmpty) {
+          _showSnack("Token not returned from server", color: Colors.red);
+          setState(() => _isLoading = false);
+          return;
+        }
+
         final nameParts = name.split(' ');
         await _saveUserLocally(
           firstName: nameParts.isNotEmpty ? nameParts.first : "",
           lastName: nameParts.length > 1 ? nameParts.last : "",
           email: email,
           accountType: selectedRole?.toLowerCase() ?? "owner",
+          token: token,
         );
 
         Navigator.pushReplacement(
@@ -182,11 +208,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  void _showSnack(String msg) {
+  void _showSnack(String msg, {Color? color}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: AppColors.button.withOpacity(0.95),
+        backgroundColor: color ?? AppColors.button.withOpacity(0.95),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
