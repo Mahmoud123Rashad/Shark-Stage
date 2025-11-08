@@ -6,9 +6,16 @@ import 'projects_screen/projects_screen.dart';
 import 'settings_screen/settings_screen.dart';
 
 class InvestorBottomNavBar extends StatefulWidget {
-  final String email; 
+  final String email;
+  final String? userId;
+  final String? role;
 
-  const InvestorBottomNavBar({super.key, required this.email});
+  const InvestorBottomNavBar({
+    super.key,
+    required this.email,
+    this.userId,
+    this.role,
+  });
 
   @override
   State<InvestorBottomNavBar> createState() => _InvestorBottomNavBarState();
@@ -24,10 +31,15 @@ class _InvestorBottomNavBarState extends State<InvestorBottomNavBar> {
     super.initState();
 
     _pages = [
-      ProjectsScreen(),
-      InvestorDashboard(),
-      ProfileScreen(email: '',),
-      SettingsScreen(),
+      ProjectsScreen(
+        userId: widget.userId,
+        role: widget.role,
+      ),
+      InvestorDashboard(
+        userId: widget.userId,
+      ),
+      ProfileScreen(email: widget.email),
+      const SettingsScreen(),
     ];
   }
 

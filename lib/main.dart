@@ -5,6 +5,8 @@ import 'screens/splash_screen.dart';
 import 'theme/theme_provider.dart';
 import 'services/api_service.dart';
 
+const _defaultApiBase = 'https://sharkserver-production.up.railway.app';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -12,8 +14,10 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final isDark = prefs.getBool('isDarkMode') ?? false;
 
-  // تهيئة API Service
-  await ApiService.init(baseUrl: "https://sharkserver-production.up.railway.app");
+  // تهيئة API Service مع مراعاة قيم dart-define
+  const runtimeApiBase =
+      String.fromEnvironment('SHARK_API_BASE', defaultValue: _defaultApiBase);
+  await ApiService.init(baseUrl: runtimeApiBase.trim().isEmpty ? _defaultApiBase : runtimeApiBase);
 
   runApp(
     ChangeNotifierProvider(

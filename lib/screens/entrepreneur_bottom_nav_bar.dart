@@ -7,12 +7,20 @@ import 'projects_screen/projects_screen.dart';
 import 'settings_screen/settings_screen.dart';
 
 class EntrepreneurBottomNavBar extends StatefulWidget {
-  final String email; // ضيفنا الإيميل هنا
+  final String email;
+  final String? userId;
+  final String? role;
 
-  const EntrepreneurBottomNavBar({super.key, required this.email});
+  const EntrepreneurBottomNavBar({
+    super.key,
+    required this.email,
+    this.userId,
+    this.role,
+  });
 
   @override
-  State<EntrepreneurBottomNavBar> createState() => _EntrepreneurBottomNavBarState();
+  State<EntrepreneurBottomNavBar> createState() =>
+      _EntrepreneurBottomNavBarState();
 }
 
 class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
@@ -24,10 +32,17 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
   void initState() {
     super.initState();
     _pages = [
-      const ProjectsScreen(),
-      const EntrepreneurDashboard(),
-       AddProjectScreen(),
-      ProfileScreen(email: '',),
+      ProjectsScreen(
+        userId: widget.userId,
+        role: widget.role,
+      ),
+      EntrepreneurDashboard(
+        userId: widget.userId,
+      ),
+      AddProjectScreen(
+        ownerId: widget.userId,
+      ),
+      ProfileScreen(email: widget.email),
       const SettingsScreen(),
     ];
   }
@@ -54,7 +69,8 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: "Add"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline), label: "Add"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
         ],

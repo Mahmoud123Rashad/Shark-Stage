@@ -1,12 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../services/api_service.dart';
+import '../../services/auth_storage.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/theme_provider.dart';
 import '../login/login_screen.dart';
 import 'settings_tile.dart';
 
-class SettingsList extends StatelessWidget {
+class SettingsList extends StatefulWidget {
   const SettingsList({super.key});
+
+  @override
+  State<SettingsList> createState() => _SettingsListState();
+}
+
+class _SettingsListState extends State<SettingsList> {
+  Future<void> _logout() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ApiService.post('auth/logout', auth: true);
+    } catch (_) {
+      // ignore network issues, we'll still clear local state
+    }
+    await AuthStorage.clear();
+
+    if (!mounted) return;
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Logged out successfully')),
+    );
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,14 +53,11 @@ class SettingsList extends StatelessWidget {
             color: theme.iconTheme.color,
           ),
           value: themeProvider.isDarkMode,
-          onChanged: (value) {
-            themeProvider.toggleTheme();
-          },
+          onChanged: (_) => themeProvider.toggleTheme(),
           activeColor: AppColors.button,
           inactiveThumbColor: Colors.grey,
         ),
         const Divider(),
-
         SettingsTile(
           icon: Icons.lock_outline,
           title: "Change Password",
@@ -43,7 +67,6 @@ class SettingsList extends StatelessWidget {
           },
         ),
         const Divider(),
-
         SettingsTile(
           icon: Icons.info_outline,
           title: "About App",
@@ -53,17 +76,11 @@ class SettingsList extends StatelessWidget {
           },
         ),
         const Divider(),
-
         SettingsTile(
           icon: Icons.logout,
           title: "Logout",
           subtitle: "Sign out of your account",
-          onTap: () {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-              (route) => false,
-            );
-          },
+          onTap: _logout,
         ),
       ],
     );

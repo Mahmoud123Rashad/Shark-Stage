@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/auth_storage.dart';
 import '../../theme/app_colors.dart';
 import '../signup/signup_screen.dart';
 import '../entrepreneur_bottom_nav_bar.dart';
@@ -44,21 +42,33 @@ class _LoginFormState extends State<LoginForm> {
     setState(() => _isLoading = false);
 
     if (result['success'] == true) {
-      final role = result['role'];
-      final email = _emailController.text.trim();
+      final summary = await AuthStorage.getUserSummary();
+      final role = (summary['role'] ?? result['role']?.toString())
+              ?.toLowerCase() ??
+          '';
+      final email = summary['email'] ?? _emailController.text.trim();
+      final userId = summary['id'];
 
       if (role == 'owner' || role == 'entrepreneur') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => EntrepreneurBottomNavBar(email: email),
+            builder: (_) => EntrepreneurBottomNavBar(
+              email: email ?? '',
+              userId: userId,
+              role: role,
+            ),
           ),
         );
       } else if (role == 'investor') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => InvestorBottomNavBar(email: email),
+            builder: (_) => InvestorBottomNavBar(
+              email: email ?? '',
+              userId: userId,
+              role: role,
+            ),
           ),
         );
       } else {

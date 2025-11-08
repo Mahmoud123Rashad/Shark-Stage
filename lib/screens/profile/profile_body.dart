@@ -1,12 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_colors.dart';
 import '../edit_profile/edit_profile_screen.dart';
 import 'profile_info_card.dart';
 import 'profile_service.dart';
+import '../../services/auth_storage.dart';
 
 class ProfileBody extends StatefulWidget {
   final String email;
@@ -27,12 +24,29 @@ class _ProfileBodyState extends State<ProfileBody> {
   @override
   void initState() {
     super.initState();
+    _hydrateFromCache();
     _fetchProfile();
   }
 
+  Future<void> _hydrateFromCache() async {
+    final cached = await AuthStorage.getUser();
+    if (cached != null && mounted) {
+      setState(() {
+        firstName = cached['firstName'] ?? firstName;
+        lastName = cached['lastName'] ?? lastName;
+        email = cached['email'] ?? widget.email;
+        phone = cached['phone'] ?? phone;
+        profilePicUrl = cached['profilePicUrl'];
+        isLoading = false;
+      });
+    }
+  }
+
   Future<void> _fetchProfile() async {
-    final data = await ProfileService.fetchProfile(widget.email);
-    if (data != null && mounted) {
+    final data = await ProfileService.fetchProfile();
+    if (!mounted) return;
+
+    if (data != null) {
       setState(() {
         firstName = data['firstName'] ?? '';
         lastName = data['lastName'] ?? '';
@@ -41,6 +55,8 @@ class _ProfileBodyState extends State<ProfileBody> {
         profilePicUrl = data['profilePicUrl'];
         isLoading = false;
       });
+    } else {
+      setState(() => isLoading = false);
     }
   }
 

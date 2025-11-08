@@ -1,53 +1,73 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../services/api_service.dart'; // افترض وجود هذا الملف
 
-// نموذج البيانات (Model)
+import '../services/api_service.dart';
+import '../services/auth_storage.dart';
+
 class Project {
   final String id;
   final String title;
   final String status;
-  final double progress; // أضفنا progress للاستخدام في الـ Card
+  final double progress;
 
-  Project({required this.id, required this.title, required this.status, this.progress = 0.0});
+  Project({
+    required this.id,
+    required this.title,
+    required this.status,
+    this.progress = 0.0,
+  });
 
   factory Project.fromJson(Map<String, dynamic> json) {
-    // ⚠️ يجب التأكد من أسماء الحقول حسب رد السيرفر
     return Project(
-      id: json['_id'],
-      title: json['title'],
-      status: json['status'] ?? 'Unknown', 
-      // مثال: قد تحتاج لحساب نسبة التقدم هنا
-      progress: 0.5, 
+      id: json['_id']?.toString() ?? '',
+      title: json['title']?.toString() ?? 'Untitled',
+      status: json['status']?.toString() ?? 'Unknown',
+      progress: 0.5,
     );
   }
 }
 
 class OwnerDashboardController {
-  // ⚠️ يجب استبدال هذا بمعرف المستخدم الحقيقي بعد تسجيل الدخول
-  final String ownerId = "672a9f6d239dabc92b4d31f9"; 
-  
-  // دالة جلب قائمة المشاريع من المسار الجديد
+  OwnerDashboardController({this.ownerId});
+
+  final String? ownerId;
+
+  Future<String?> _resolveOwnerId() async {
+    if (ownerId != null && ownerId!.isNotEmpty) {
+      return ownerId;
+    }
+    final summary = await AuthStorage.getUserSummary();
+    return summary['id'];
+  }
+
   Future<List<Project>> fetchOwnerProjects() async {
-    final url = Uri.parse("${ApiService.baseUrl}/projects/owner/$ownerId");
+    final resolvedOwner = await _resolveOwnerId();
+    if (resolvedOwner == null || resolvedOwner.isEmpty) {
+      return [];
+    }
 
     try {
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> projectsJson = jsonDecode(response.body);
-        return projectsJson.map((json) => Project.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load projects: Status ${response.statusCode}');
+      final response = await ApiService.get(
+        'projects/user/$resolvedOwner',
+        auth: true,
+      );
+      final status = response['status'] as int? ?? 500;
+      if (status == 200 && response['userProjects'] is List<dynamic>) {
+        final list = response['userProjects'] as List<dynamic>;
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(Project.fromJson)
+            .toList();
       }
+      debugPrint(
+        'Failed to load projects: ${response['message'] ?? 'status $status'}',
+      );
+      return [];
     } catch (e) {
       debugPrint('Error fetching owner projects: $e');
-      throw Exception('Network or parsing error: $e');
+      return [];
     }
   }
 
-  // دالة جلب الإحصائيات (وهمية حالياً، تتطلب مسار API منفصل)
   Future<Map<String, String>> fetchStats() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return {

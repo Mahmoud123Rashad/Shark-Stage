@@ -4,7 +4,8 @@ import '../../widgets/investor_project_card.dart';
 import '../../widgets/investor_stat_card.dart';
 
 class InvestorDashboard extends StatelessWidget {
-  const InvestorDashboard({super.key});
+  final String? userId;
+  const InvestorDashboard({super.key, this.userId});
 
   @override
   Widget build(BuildContext context) {

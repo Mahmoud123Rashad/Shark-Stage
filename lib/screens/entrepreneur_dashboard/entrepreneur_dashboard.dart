@@ -7,14 +7,15 @@ import 'package:flutter/material.dart';
 // ملاحظة: نموذج Project يتم استيراده ضمنياً مع ملف المتحكم إذا كان مُعرّفاً فيه.
 
 class EntrepreneurDashboard extends StatefulWidget {
-   const EntrepreneurDashboard({super.key});
+   final String? userId;
+   const EntrepreneurDashboard({super.key, this.userId});
 
    @override
    State<EntrepreneurDashboard> createState() => _EntrepreneurDashboardState();
 }
 
 class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
-   final _controller = OwnerDashboardController();
+   late final OwnerDashboardController _controller;
    
    // يجب استخدام "Project" المُعرَّف في owner_dashboard_controller.dart
    late Future<List<Project>> _projectsFuture; 
@@ -23,6 +24,7 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
    @override
    void initState() {
       super.initState();
+      _controller = OwnerDashboardController(ownerId: widget.userId);
       _projectsFuture = _controller.fetchOwnerProjects();
       _statsFuture = _controller.fetchStats();
    }

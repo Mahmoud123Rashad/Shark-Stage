@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../theme/app_colors.dart';
+import '../services/auth_storage.dart';
+import 'entrepreneur_bottom_nav_bar.dart';
 import 'intro_investor.dart';
+import 'investor_bottom_nav_bar.dart';
+import 'profile/profile_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,12 +25,71 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const IntroInvestorScreen()),
-      );
-    });
+    _startNavigationSequence();
+  }
+
+  Future<void> _startNavigationSequence() async {
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    try {
+      final token = await AuthStorage.getToken();
+      if (!mounted) return;
+
+      if (token == null || token.isEmpty) {
+        _navigateTo(const IntroInvestorScreen());
+        return;
+      }
+
+      var summary = await AuthStorage.getUserSummary();
+      var role = summary['role']?.toLowerCase();
+      var email = summary['email'];
+      var userId = summary['id'];
+
+      if ((role == null || role.isEmpty) || (email == null || email.isEmpty)) {
+        final profile = await ProfileService.fetchProfile();
+        if (profile != null) {
+          role = profile['accountType']?.toString().toLowerCase() ?? role;
+          email = profile['email']?.toString() ?? email;
+          userId =
+              profile['_id']?.toString() ?? profile['id']?.toString() ?? userId;
+        }
+      }
+
+      if (!mounted) return;
+
+      switch (role) {
+        case 'owner':
+        case 'entrepreneur':
+          _navigateTo(
+            EntrepreneurBottomNavBar(
+              email: email ?? '',
+              userId: userId,
+              role: role,
+            ),
+          );
+          break;
+        case 'investor':
+          _navigateTo(
+            InvestorBottomNavBar(
+              email: email ?? '',
+              userId: userId,
+              role: role,
+            ),
+          );
+          break;
+        default:
+          await AuthStorage.clear();
+          _navigateTo(const IntroInvestorScreen());
+      }
+    } catch (_) {
+      if (!mounted) return;
+      _navigateTo(const IntroInvestorScreen());
+    }
+  }
+
+  void _navigateTo(Widget page) {
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => page));
   }
 
   @override
@@ -44,10 +107,7 @@ class _SplashScreenState extends State<SplashScreen>
         decoration: BoxDecoration(
           gradient: isDark
               ? const LinearGradient(
-                  colors: [
-                    Color(0xFF0A0E21),
-                    Color(0xFF1C1F2E),
-                  ],
+                  colors: [Color(0xFF0A0E21), Color(0xFF1C1F2E)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 )
@@ -59,10 +119,7 @@ class _SplashScreenState extends State<SplashScreen>
             children: [
               ScaleTransition(
                 scale: Tween(begin: 0.9, end: 1.1).animate(
-                  CurvedAnimation(
-                    parent: _controller,
-                    curve: Curves.easeInOut,
-                  ),
+                  CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
                 ),
                 child: Container(
                   width: 230,
@@ -106,7 +163,7 @@ class _SplashScreenState extends State<SplashScreen>
                           ? Colors.blueAccent.withOpacity(0.4)
                           : Colors.black26,
                       blurRadius: 10,
-                    )
+                    ),
                   ],
                 ),
               ),

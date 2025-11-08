@@ -1,20 +1,27 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+
+import '../../services/api_service.dart';
 import '../chatbot/chatbot_screen.dart';
 import 'project_list.dart';
 
 class ProjectsScreen extends StatefulWidget {
-  const ProjectsScreen({super.key});
+  final String? userId;
+  final String? role;
+
+  const ProjectsScreen({
+    super.key,
+    this.userId,
+    this.role,
+  });
 
   @override
   State<ProjectsScreen> createState() => _ProjectsScreenState();
 }
 
 class _ProjectsScreenState extends State<ProjectsScreen> {
-  final String baseUrl = "https://sharkserver-production.up.railway.app";
   List<dynamic> _projects = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -23,22 +30,31 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> fetchProjects() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
-      final response = await http.get(Uri.parse("$baseUrl/projects"));
-
-      debugPrint("📡 GET /projects => ${response.statusCode}");
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      final response = await ApiService.get('projects');
+      final status = response['status'] as int? ?? 500;
+      if (status == 200 && response['allProjects'] is List<dynamic>) {
         setState(() {
-          _projects = data["allProjects"] ?? [];
+          _projects = List<dynamic>.from(response['allProjects']);
           _isLoading = false;
         });
       } else {
-        throw Exception("Failed to fetch projects");
+        setState(() {
+          _error = response['message']?.toString() ??
+              'Failed to fetch projects (status $status)';
+          _isLoading = false;
+        });
       }
     } catch (e) {
       debugPrint("❌ Error fetching projects: $e");
-      setState(() => _isLoading = false);
+      setState(() {
+        _error = 'Failed to fetch projects: $e';
+        _isLoading = false;
+      });
     }
   }
 
@@ -69,7 +85,30 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ),
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : ProjectList(projects: _projects),
+            : _error != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _error!,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onBackground,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: fetchProjects,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : ProjectList(projects: _projects),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

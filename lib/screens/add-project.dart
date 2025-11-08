@@ -1,7 +1,10 @@
 import 'package:finial_project/widgets/project_form.dart';
 import 'package:flutter/material.dart';
+
 class AddProjectScreen extends StatelessWidget {
-  const AddProjectScreen({super.key});
+  final String? ownerId;
+
+  const AddProjectScreen({super.key, this.ownerId});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +24,9 @@ class AddProjectScreen extends StatelessWidget {
               : const LinearGradient(
                   colors: [Color(0xFFE3F2FD), Color(0xFFFFFFFF)]),
         ),
-        child: const SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: ProjectForm(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: ProjectForm(ownerId: ownerId),
         ),
       ),
     );
