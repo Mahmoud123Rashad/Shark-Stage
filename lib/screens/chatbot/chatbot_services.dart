@@ -1,28 +1,27 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../../services/api_service.dart';
 
 class ChatBotService {
-  static const String baseUrl = "http://10.189.241.195:5000/chatbot/ask";
-
   static Future<String> sendMessage(String message) async {
     try {
-      final response = await http.post(
-        Uri.parse(baseUrl),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "question": message,
-          "language": "ar",
-        }),
+      final response = await ApiService.post(
+        'chatbot/ask',
+        body: {'question': message, 'language': 'ar'},
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data["answer"] ?? "حدث خطأ في الرد.";
-      } else {
-        return "حدث خطأ في الاتصال (${response.statusCode})";
+      final status = response['status'] as int? ?? 500;
+      if (status == 200) {
+        final data = response['answer'];
+        if (data != null) {
+          return data.toString();
+        }
+        if (response['message'] != null) {
+          return response['message'].toString();
+        }
+        return "حدث خطأ في الرد.";
       }
+      return "حدث خطأ في الاتصال ($status)";
     } catch (e) {
-      return "Connect tothe server failed";
+      return "Connect to the server failed: $e";
     }
   }
 }

@@ -46,7 +46,11 @@ class _SignUpFormState extends State<SignUpForm> {
         const SizedBox(height: 18),
         const Text(
           "Create Your Account",
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 12),
         Text("Sign up to access your dashboard", style: labelStyle),
@@ -99,10 +103,16 @@ class _SignUpFormState extends State<SignUpForm> {
                   labelStyle: labelStyle,
                 ),
                 const SizedBox(height: 18),
-                Align(alignment: Alignment.centerLeft, child: Text("Account Type", style: labelStyle)),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Account Type", style: labelStyle),
+                ),
                 const SizedBox(height: 8),
                 ToggleButtons(
-                  isSelected: [selectedRole == "owner", selectedRole == "investor"],
+                  isSelected: [
+                    selectedRole == "owner",
+                    selectedRole == "investor",
+                  ],
                   borderRadius: BorderRadius.circular(12),
                   fillColor: AppColors.button.withOpacity(0.18),
                   selectedColor: AppColors.button,
@@ -114,11 +124,17 @@ class _SignUpFormState extends State<SignUpForm> {
                   },
                   children: const [
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 10,
+                      ),
                       child: Text("Owner"),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 10,
+                      ),
                       child: Text("Investor"),
                     ),
                   ],
@@ -129,7 +145,9 @@ class _SignUpFormState extends State<SignUpForm> {
                     ? const CircularProgressIndicator()
                     : SignUpButtons(
                         onEmailSignUp: () async {
-                          if (!_formKey.currentState!.validate() || selectedRole == null) return;
+                          if (!_formKey.currentState!.validate() ||
+                              selectedRole == null)
+                            return;
                           setState(() => _isLoading = true);
                           await _services.signUpWithEmail(
                             context: context,
@@ -139,13 +157,27 @@ class _SignUpFormState extends State<SignUpForm> {
                             password: _password.text.trim(),
                             role: selectedRole!,
                           );
+                          if (!mounted) return;
                           setState(() => _isLoading = false);
                         },
                         onGoogleSignUp: () async {
-                          await _services.signInWithGoogle(context, selectedRole ?? "owner");
-                        },
-                        onLinkedInSignUp: () async {
-                          await _services.signInWithLinkedIn(context, selectedRole ?? "owner");
+                          if (selectedRole == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Please choose an account type first.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          setState(() => _isLoading = true);
+                          await _services.signInWithGoogle(
+                            context,
+                            selectedRole!,
+                          );
+                          if (!mounted) return;
+                          setState(() => _isLoading = false);
                         },
                       ),
               ],

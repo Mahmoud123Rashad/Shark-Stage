@@ -1,20 +1,29 @@
+import 'dart:async';
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 import 'auth_storage.dart';
 
 class ApiService {
   static late String baseUrl;
+  static Future<void> Function()? _onUnauthorized;
+  static bool _isHandlingUnauthorized = false;
 
-  static Future<void> init({required String baseUrl}) async {
+  static Future<void> init({
+    required String baseUrl,
+    Future<void> Function()? onUnauthorized,
+  }) async {
     ApiService.baseUrl = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
+    _onUnauthorized = onUnauthorized;
   }
 
   static Uri _resolve(String endpoint) {
-    final sanitized =
-        endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    final sanitized = endpoint.startsWith('/')
+        ? endpoint.substring(1)
+        : endpoint;
     return Uri.parse('$baseUrl/$sanitized');
   }
 
@@ -68,6 +77,7 @@ class ApiService {
     );
 
     print("⬅️ Response (${response.statusCode}): ${response.body}");
+    _maybeHandleUnauthorized(response.statusCode);
     return _parseResponse(response);
   }
 
@@ -83,6 +93,7 @@ class ApiService {
       headers: await _buildHeaders(auth: auth, headers: headers),
     );
     print("⬅️ Response (${response.statusCode}): ${response.body}");
+    _maybeHandleUnauthorized(response.statusCode);
     return _parseResponse(response);
   }
 
@@ -100,6 +111,7 @@ class ApiService {
       body: jsonEncode(body ?? {}),
     );
     print("⬅️ Response (${response.statusCode}): ${response.body}");
+    _maybeHandleUnauthorized(response.statusCode);
     return _parseResponse(response);
   }
 
@@ -117,6 +129,7 @@ class ApiService {
       body: jsonEncode(body ?? {}),
     );
     print("⬅️ Response (${response.statusCode}): ${response.body}");
+    _maybeHandleUnauthorized(response.statusCode);
     return _parseResponse(response);
   }
 
@@ -132,6 +145,27 @@ class ApiService {
       headers: await _buildHeaders(auth: auth, headers: headers),
     );
     print("⬅️ Response (${response.statusCode}): ${response.body}");
+    _maybeHandleUnauthorized(response.statusCode);
     return response.statusCode == 200;
+  }
+
+  static void _maybeHandleUnauthorized(int statusCode) {
+    if (statusCode == 401 || statusCode == 403) {
+      unawaited(_handleUnauthorized());
+    }
+  }
+
+  static Future<void> _handleUnauthorized() async {
+    if (_isHandlingUnauthorized) return;
+    _isHandlingUnauthorized = true;
+    try {
+      await AuthStorage.clear();
+      final callback = _onUnauthorized;
+      if (callback != null) {
+        await callback();
+      }
+    } finally {
+      _isHandlingUnauthorized = false;
+    }
   }
 }

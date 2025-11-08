@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/splash_screen.dart';
-import 'theme/theme_provider.dart';
+
 import 'services/api_service.dart';
+import 'theme/theme_provider.dart';
+import 'screens/login/login_screen.dart';
+import 'screens/splash_screen.dart';
 
 const _defaultApiBase = 'https://sharkserver-production.up.railway.app';
+final GlobalKey<NavigatorState> _appNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,22 +18,44 @@ Future<void> main() async {
   final isDark = prefs.getBool('isDarkMode') ?? false;
 
   // تهيئة API Service مع مراعاة قيم dart-define
-  const runtimeApiBase =
-      String.fromEnvironment('SHARK_API_BASE', defaultValue: _defaultApiBase);
-  await ApiService.init(baseUrl: runtimeApiBase.trim().isEmpty ? _defaultApiBase : runtimeApiBase);
+  const runtimeApiBase = String.fromEnvironment(
+    'SHARK_API_BASE',
+    defaultValue: _defaultApiBase,
+  );
+  final resolvedBase = runtimeApiBase.trim().isEmpty
+      ? _defaultApiBase
+      : runtimeApiBase;
+
+  await ApiService.init(
+    baseUrl: resolvedBase,
+    onUnauthorized: () async {
+      final context = _appNavigatorKey.currentContext;
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Your session has expired. Please log in again.'),
+          ),
+        );
+      }
+      _appNavigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    },
+  );
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) => ThemeProvider(
-        isDark ? ThemeMode.dark : ThemeMode.light,
-      ),
-      child: const SharkTankApp(),
+      create: (_) => ThemeProvider(isDark ? ThemeMode.dark : ThemeMode.light),
+      child: SharkTankApp(navigatorKey: _appNavigatorKey),
     ),
   );
 }
 
 class SharkTankApp extends StatelessWidget {
-  const SharkTankApp({super.key});
+  const SharkTankApp({super.key, required this.navigatorKey});
+
+  final GlobalKey<NavigatorState> navigatorKey;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +64,7 @@ class SharkTankApp extends StatelessWidget {
         return MaterialApp(
           title: 'Shark Stage',
           debugShowCheckedModeBanner: false,
+          navigatorKey: navigatorKey,
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,
           themeMode: themeProvider.isDarkMode

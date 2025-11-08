@@ -4,13 +4,13 @@ import '../../theme/app_colors.dart';
 class SignUpButtons extends StatelessWidget {
   final VoidCallback onEmailSignUp;
   final VoidCallback onGoogleSignUp;
-  final VoidCallback onLinkedInSignUp;
+  final VoidCallback? onLinkedInSignUp;
 
   const SignUpButtons({
     super.key,
     required this.onEmailSignUp,
     required this.onGoogleSignUp,
-    required this.onLinkedInSignUp,
+    this.onLinkedInSignUp,
   });
 
   @override
@@ -20,15 +20,20 @@ class SignUpButtons extends StatelessWidget {
         _buildMainButton("Sign Up", onEmailSignUp),
         const SizedBox(height: 16),
         _buildSocialButton(
-          "Sign up with Google",
-          "https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png",
-          onGoogleSignUp,
+          context,
+          text: "Sign up with Google",
+          logoUrl:
+              "https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png",
+          onTap: onGoogleSignUp,
         ),
         const SizedBox(height: 12),
         _buildSocialButton(
-          "Sign up with LinkedIn",
-          "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png",
-          onLinkedInSignUp,
+          context,
+          text: "Sign up with LinkedIn (Coming Soon)",
+          logoUrl:
+              "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png",
+          onTap: onLinkedInSignUp,
+          enabled: false,
         ),
       ],
     );
@@ -41,35 +46,68 @@ class SignUpButtons extends StatelessWidget {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.button,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         onPressed: onPressed,
-        child: Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
 
-  Widget _buildSocialButton(String text, String logoUrl, VoidCallback onTap) {
+  Widget _buildSocialButton(
+    BuildContext context, {
+    required String text,
+    required String logoUrl,
+    VoidCallback? onTap,
+    bool enabled = true,
+  }) {
+    final content = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.network(logoUrl, width: 24, height: 24),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withOpacity(enabled ? 1 : 0.6),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    final button = Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(enabled ? 0.1 : 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white24.withOpacity(enabled ? 1 : 0.4),
+        ),
+      ),
+      child: Center(child: content),
+    );
+
+    if (!enabled) {
+      return Tooltip(
+        message: "LinkedIn authentication will be available soon",
+        child: IgnorePointer(child: button),
+      );
+    }
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white24),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.network(logoUrl, width: 24, height: 24),
-            const SizedBox(width: 12),
-            Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
+      child: button,
     );
   }
 }
