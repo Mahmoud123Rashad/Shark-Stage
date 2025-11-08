@@ -1,53 +1,53 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import 'projects_screen.dart';
+import 'package:flutter/material.dart';
+
 import 'investor_dashboard.dart';
+import 'navigation/navigation_item.dart';
+import 'navigation/navigation_shell.dart';
+import 'offers_screen.dart';
 import 'profile_screen.dart';
+import 'projects_screen.dart';
 import 'settings_screen.dart';
 
-class InvestorBottomNavBar extends StatefulWidget {
+class InvestorBottomNavBar extends StatelessWidget {
   const InvestorBottomNavBar({super.key});
 
   @override
-  State<InvestorBottomNavBar> createState() => _InvestorBottomNavBarState();
-}
-
-class _InvestorBottomNavBarState extends State<InvestorBottomNavBar> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _pages = const [
-    ProjectsScreen(),
-    InvestorDashboard(),
-    ProfileScreen(),
-    SettingsScreen(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: colorScheme.surface,
-        selectedItemColor: AppColors.button,
-        unselectedItemColor: colorScheme.onSurface.withOpacity(0.6),
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.trending_up), label: "Dashboard"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
-        ],
-      ),
+    return NavigationShell(
+      initialIndex: 0,
+      items: <NavigationItem>[
+        NavigationItem(
+          label: 'Dashboard',
+          icon: Icons.auto_graph_outlined,
+          activeIcon: Icons.auto_graph,
+          builder: (_) => const InvestorDashboard(),
+        ),
+        NavigationItem(
+          label: 'Discover',
+          icon: Icons.search_outlined,
+          activeIcon: Icons.search,
+          builder: (_) => const ProjectsScreen(),
+        ),
+        NavigationItem(
+          label: 'Offers',
+          icon: Icons.handshake_outlined,
+          activeIcon: Icons.handshake,
+          builder: (_) => const OffersScreen(),
+        ),
+        NavigationItem(
+          label: 'Profile',
+          icon: Icons.person_outline,
+          activeIcon: Icons.person,
+          builder: (_) => const ProfileScreen(),
+        ),
+        NavigationItem(
+          label: 'Settings',
+          icon: Icons.tune,
+          activeIcon: Icons.tune_rounded,
+          builder: (_) => const SettingsScreen(),
+        ),
+      ],
     );
   }
 }

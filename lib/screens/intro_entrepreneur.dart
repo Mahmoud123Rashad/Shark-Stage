@@ -49,13 +49,11 @@ class _IntroEntrepreneurScreenState extends State<IntroEntrepreneurScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                //  Sniper Image Slider 
+                //  Sniper Image Slider
                 AnimatedSwitcher(
                   duration: const Duration(seconds: 1),
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
                   child: Container(
                     key: ValueKey(_images[_currentIndex]),
                     width: 330,
@@ -92,7 +90,9 @@ class _IntroEntrepreneurScreenState extends State<IntroEntrepreneurScreen> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                        color: Colors.white24, width: 1),
+                                      color: Colors.white24,
+                                      width: 1,
+                                    ),
                                   ),
                                 ),
                                 Center(
@@ -150,7 +150,7 @@ class _IntroEntrepreneurScreenState extends State<IntroEntrepreneurScreen> {
                 Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.button,
+                      backgroundColor: AppColors.accent,
                       foregroundColor: AppColors.heading,
                       shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(

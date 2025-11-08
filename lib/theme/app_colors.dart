@@ -1,26 +1,40 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_palette.dart';
+
 class AppColors {
-  static const Color primary = Color(0xFF3A5A92);
-  static const Color secondary = Color(0xFF6FA8DC);
-  static const Color button = Color(0xFFF2C94C);
+  /// Brand tokens
+  static const Color primary = AppPalette.primary;
+  static const Color secondary = AppPalette.secondary;
+  static const Color tertiary = AppPalette.tertiary;
+  static const Color accent = AppPalette.accent;
 
-  static const Color background = Color(0xFFF5F5F5);
-  static const Color heading = Color(0xFF13294B);
-  static const Color paragraph = Color(0xFF7F8C8D);
-  static const Color soft = Color(0xFFDBE9F7);
+  /// Semantics
+  static const Color success = AppPalette.success;
+  static const Color warning = AppPalette.warning;
+  static const Color danger = AppPalette.danger;
+  static const Color info = AppPalette.info;
 
-  static const Color card = Color(0xFFFFFFFF);
-  static const Color shadow = Color(0x33000000); 
+  /// Surfaces
+  static const Color background = AppPalette.background;
+  static const Color surface = AppPalette.surface;
+  static const Color surfaceMuted = AppPalette.surfaceMuted;
+  static const Color surfaceDark = AppPalette.surfaceDark;
+  static const Color card = AppPalette.card;
+  static const Color soft = AppPalette.soft;
 
-  static const LinearGradient mainGradient = LinearGradient(
-    colors: [
-      Color(0xFF3A5A92), 
-      Color(0xFF6FA8DC), 
-    ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  /// Typography
+  static const Color heading = AppPalette.heading;
+  static const Color paragraph = AppPalette.paragraph;
+  static const Color muted = AppPalette.muted;
 
-  static Color? get cardBackground => null;
+  /// Borders & shadow
+  static const Color outline = AppPalette.outline;
+  static const Color outlineStrong = AppPalette.outlineStrong;
+  static const Color shadow = AppPalette.shadow;
+
+  /// Gradients
+  static const LinearGradient mainGradient = AppPalette.marketingGradient;
+  static const LinearGradient dashboardGradient = AppPalette.dashboardGradient;
+  static const LinearGradient accentGradient = AppPalette.accentGradient;
 }

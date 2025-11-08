@@ -83,5 +83,4 @@ class DefaultFirebaseOptions {
     authDomain: 'shark-stage-4e60d.firebaseapp.com',
     storageBucket: 'shark-stage-4e60d.firebasestorage.app',
   );
-
 }

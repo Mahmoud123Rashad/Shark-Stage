@@ -1,7 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../core/theme/app_spacing.dart';
 import '../theme/app_colors.dart';
+import '../widgets/status_chip.dart';
+import '../widgets/ui_card.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 
@@ -14,28 +21,80 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   File? _profileImage;
-
-  // بيانات المستخدم الحالية
-  String firstName = "Mahmoud";
-  String lastName = "Diab";
-  String email = "mahmoud@example.com";
-  String phone = "+20 103 209 2421";
+  String firstName = 'Mahmoud';
+  String lastName = 'Diab';
+  String email = 'mahmoud@example.com';
+  String phone = '+20 103 209 2421';
 
   Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final XFile? picked =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
+      setState(() => _profileImage = File(picked.path));
+    }
+  }
+
+  Future<void> _exportProfile() async {
+    final Map<String, dynamic> payload = <String, dynamic>{
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'phone': phone,
+    };
+    final String json = const JsonEncoder.withIndent('  ').convert(payload);
+
+    await Clipboard.setData(ClipboardData(text: json));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile exported to clipboard'),
+        backgroundColor: AppColors.success,
+      ),
+    );
+  }
+
+  Future<void> _editProfile() async {
+    final dynamic result = await Navigator.push(
+      context,
+      MaterialPageRoute<dynamic>(
+        builder: (BuildContext context) => EditProfileScreen(
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          phone: phone,
+          image: _profileImage,
+        ),
+      ),
+    );
+
+    if (result != null) {
       setState(() {
-        _profileImage = File(picked.path);
+        firstName = result['firstName'] as String? ?? firstName;
+        lastName = result['lastName'] as String? ?? lastName;
+        email = result['email'] as String? ?? email;
+        phone = result['phone'] as String? ?? phone;
+        _profileImage = result['image'] as File? ?? _profileImage;
       });
     }
   }
 
+  void _logout() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute<Widget>(builder: (_) => const LoginScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final String initials =
+        '${firstName.isNotEmpty ? firstName[0] : ''}${lastName.isNotEmpty ? lastName[0] : ''}'
+            .toUpperCase();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Profile", style: TextStyle(color: Colors.white)),
+        title: const Text('Profile', style: TextStyle(color: Colors.white)),
         flexibleSpace: Container(
           decoration: const BoxDecoration(gradient: AppColors.mainGradient),
         ),
@@ -43,22 +102,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xl,
+        ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-
-            // صورة البروفايل
-            Center(
-              child: Stack(
+            UiCard(
+              leading: Stack(
                 children: [
                   CircleAvatar(
-                    radius: 60,
-                    backgroundColor: AppColors.soft,
+                    radius: 36,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     backgroundImage: _profileImage != null
                         ? FileImage(_profileImage!)
-                        : const AssetImage('images/profile.jpeg')
-                            as ImageProvider,
+                        : null,
+                    child: _profileImage == null
+                        ? Text(
+                            initials.isNotEmpty ? initials : 'ME',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          )
+                        : null,
                   ),
                   Positioned(
                     bottom: 0,
@@ -66,101 +138,98 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: CircleAvatar(
-                        backgroundColor: AppColors.primary,
-                        radius: 20,
-                        child: const Icon(Icons.camera_alt,
-                            color: Colors.white, size: 20),
+                        radius: 16,
+                        backgroundColor: AppColors.accent,
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 16,
+                          color: AppColors.heading,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // الاسم الكامل
-            Text(
-              "$firstName $lastName",
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.heading,
+              title: '$firstName $lastName',
+              subtitle: 'Entrepreneur',
+              trailing: StatusChip(
+                label: 'Profile 85% complete',
+                tone: StatusTone.info,
+                icon: Icons.auto_graph,
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text("Entrepreneur",
-                style: TextStyle(color: AppColors.paragraph)),
-
-            const SizedBox(height: 30),
-
-            // معلومات المستخدم
-            _infoTile(Icons.person, "First Name", firstName),
-            _infoTile(Icons.person_outline, "Last Name", lastName),
-            _infoTile(Icons.email, "Email", email),
-            _infoTile(Icons.phone, "Phone", phone),
-
-            const SizedBox(height: 25),
-
-            // زر تعديل الملف
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditProfileScreen(
-                      firstName: firstName,
-                      lastName: lastName,
-                      email: email,
-                      phone: phone,
-                      image: _profileImage,
-                    ),
+              child: Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _editProfile,
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('Edit profile'),
                   ),
-                );
-
-                // تحديث البيانات بعد الرجوع من صفحة التعديل
-                if (result != null) {
-                  setState(() {
-                    firstName = result['firstName'];
-                    lastName = result['lastName'];
-                    email = result['email'];
-                    phone = result['phone'];
-                    _profileImage = result['image'];
-                  });
-                }
-              },
-              icon: const Icon(Icons.edit, color: Colors.white),
-              label: const Text("Edit Profile",
-                  style: TextStyle(color: Colors.white, fontSize: 16)),
-            ),
-
-            const SizedBox(height: 12),
-
-            // زر تسجيل الخروج
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                side: const BorderSide(color: AppColors.primary, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                  const SizedBox(width: AppSpacing.sm),
+                  OutlinedButton.icon(
+                    onPressed: _exportProfile,
+                    icon: const Icon(Icons.file_download_outlined, size: 18),
+                    label: const Text('Export'),
+                  ),
+                ],
               ),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
-              },
-              icon: const Icon(Icons.logout, color: AppColors.primary),
-              label: const Text(
-                "Logout",
-                style: TextStyle(color: AppColors.primary, fontSize: 16),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            UiCard(
+              title: 'Contact details',
+              child: Column(
+                children: [
+                  _DetailTile(
+                    icon: Icons.person_outline,
+                    label: 'First name',
+                    value: firstName,
+                  ),
+                  _DetailTile(
+                    icon: Icons.person,
+                    label: 'Last name',
+                    value: lastName,
+                  ),
+                  _DetailTile(
+                    icon: Icons.email_outlined,
+                    label: 'Email',
+                    value: email,
+                  ),
+                  _DetailTile(
+                    icon: Icons.phone_outlined,
+                    label: 'Phone',
+                    value: phone,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            UiCard(
+              title: 'Account actions',
+              child: Column(
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.lock_reset_outlined),
+                    title: const Text('Reset password'),
+                    subtitle: const Text(
+                      'We’ll send a secure reset link to your email',
+                    ),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Password reset instructions will be sent to your email.',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.logout, color: AppColors.danger),
+                    title: const Text('Logout'),
+                    onTap: _logout,
+                  ),
+                ],
               ),
             ),
           ],
@@ -168,41 +237,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+}
 
-  Widget _infoTile(IconData icon, String label, String value) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.primary),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: const TextStyle(fontSize: 13, color: Colors.black54)),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ],
-      ),
+class _DetailTile extends StatelessWidget {
+  const _DetailTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: AppColors.primary),
+      title: Text(label),
+      subtitle: Text(value),
     );
   }
 }

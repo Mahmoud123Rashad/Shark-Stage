@@ -48,13 +48,11 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                //  Sniper Image Slider 
+                //  Sniper Image Slider
                 AnimatedSwitcher(
                   duration: const Duration(seconds: 1),
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
                   child: Container(
                     key: ValueKey(_images[_currentIndex]),
                     width: 330,
@@ -65,13 +63,13 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
                       //   // color: AppColors.button,
                       //   // width: 4,
                       // ),
-                    //   boxShadow: [
-                    //     BoxShadow(
-                    //       color: Colors.black.withOpacity(0.3),
-                    //       blurRadius: 15,
-                    //       offset: const Offset(0, 8),
-                    //     ),
-                    //   ],
+                      //   boxShadow: [
+                      //     BoxShadow(
+                      //       color: Colors.black.withOpacity(0.3),
+                      //       blurRadius: 15,
+                      //       offset: const Offset(0, 8),
+                      //     ),
+                      //   ],
                     ),
                     child: ClipOval(
                       child: Stack(
@@ -150,7 +148,7 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
                 Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.button,
+                      backgroundColor: AppColors.accent,
                       foregroundColor: AppColors.heading,
                       shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(
@@ -164,8 +162,7 @@ class _IntroInvestorScreenState extends State<IntroInvestorScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const IntroEntrepreneurScreen(),
+                          builder: (context) => const IntroEntrepreneurScreen(),
                         ),
                       );
                     },

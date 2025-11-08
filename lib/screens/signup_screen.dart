@@ -1,167 +1,92 @@
+import 'package:finial_project/features/auth/application/auth_controller.dart';
+import 'package:finial_project/features/auth/application/auth_state.dart';
+import 'package:finial_project/features/auth/domain/app_user.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as legacy_provider;
+
 import '../theme/app_colors.dart';
 import '../theme/theme_provider.dart';
-import 'add-project.dart';
+import 'add_project.dart';
 import 'projects_screen.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key, required Null Function() onToggleTheme});
+class SignUpScreen extends ConsumerStatefulWidget {
+  const SignUpScreen({super.key, required void Function() onToggleTheme});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   String? selectedRole;
-  bool _isLoading = false;
 
-  // Sign up with email
-  Future<void> _signUpWithEmail() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (selectedRole == null) {
-      _showSnack("Please select your role");
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      final user = userCredential.user;
-
-      await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
-        'email': _emailController.text.trim(),
-        'role': selectedRole,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      _showSnack("Account created successfully ");
-
-      if (selectedRole == 'Entrepreneur') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const Add_project()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ProjectsScreen()),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      _showSnack("Error: ${e.message}");
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  // Sign in with Google
-  Future<void> _signInWithGoogle() async {
-    try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        _showSnack("Sign-in cancelled");
-        return;
-      }
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-        accessToken: googleAuth.accessToken,
-      );
-
-      final userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
-      final user = userCredential.user;
-
-      final userDoc = FirebaseFirestore.instance.collection('users').doc(user!.uid);
-      final snapshot = await userDoc.get();
-
-      String role;
-      if (!snapshot.exists) {
-        role = await _selectRoleDialog();
-        await userDoc.set({
-          'email': user.email,
-          'role': role,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      } else {
-        role = snapshot['role'];
-      }
-
-      if (role == 'Entrepreneur') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const Add_project()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ProjectsScreen()),
-        );
-      }
-
-      _showSnack("Signed in with Google");
-    } catch (e) {
-      _showSnack("Google Sign-In failed: $e");
-    }
-  }
-
-  Future<String> _selectRoleDialog() async {
-    String selected = "Investor";
-    return await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Select your role"),
-          content: StatefulBuilder(
-            builder: (context, setState) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RadioListTile<String>(
-                  title: const Text("Entrepreneur"),
-                  value: "Entrepreneur",
-                  groupValue: selected,
-                  onChanged: (value) => setState(() => selected = value!),
-                ),
-                RadioListTile<String>(
-                  title: const Text("Investor"),
-                  value: "Investor",
-                  groupValue: selected,
-                  onChanged: (value) => setState(() => selected = value!),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(selected),
-              child: const Text("OK"),
-            ),
-          ],
-        );
-      },
+  void _authListener(AuthState? previous, AuthState next) {
+    next.when(
+      initial: () {},
+      loading: (_) {},
+      authenticated: _navigateAfterSignup,
+      unauthenticated: () {},
+      failure: _showSnack,
     );
   }
 
-  void _showSnack(String msg) {
+  Future<void> _signUpWithEmail() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (selectedRole == null) {
+      _showSnack('Please select your role');
+      return;
+    }
+
+    await ref
+        .read(authControllerProvider.notifier)
+        .signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          accountType: selectedRole!,
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+        );
+  }
+
+  Future<void> _signUpWithGoogle() async {
+    if (selectedRole == null) {
+      _showSnack('Please select your role');
+      return;
+    }
+
+    await ref
+        .read(authControllerProvider.notifier)
+        .signUpWithGoogle(accountType: selectedRole!);
+  }
+
+  void _navigateAfterSignup(AppUser user) {
+    if (!mounted) return;
+    final String role = user.accountType.toLowerCase();
+    Widget destination;
+    if (role == 'entrepreneur') {
+      destination = const AddProject();
+    } else {
+      destination = const ProjectsScreen();
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute<Widget>(builder: (_) => destination),
+    );
+    _showSnack('Account created successfully');
+  }
+
+  void _showSnack(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg),
-        backgroundColor: AppColors.button.withOpacity(0.9),
+        content: Text(message),
+        backgroundColor: AppColors.accent.withValues(alpha: 0.9),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -170,15 +95,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    ref.listen<AuthState>(authControllerProvider, _authListener);
+    final AuthState authState = ref.watch(authControllerProvider);
+    final bool isLoading = authState.maybeWhen(
+      loading: (_) => true,
+      orElse: () => false,
+    );
+
+    final ThemeProvider themeProvider =
+        legacy_provider.Provider.of<ThemeProvider>(context);
+    final bool isDark = themeProvider.isDarkMode;
 
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: isDark
               ? const LinearGradient(
-                  colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+                  colors: [
+                    Color(0xFF0F2027),
+                    Color(0xFF203A43),
+                    Color(0xFF2C5364),
+                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 )
@@ -187,7 +124,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: SafeArea(
           child: Stack(
             children: [
-              // زر تبديل الثيم
               Positioned(
                 top: 20,
                 right: 20,
@@ -200,19 +136,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   onPressed: () => themeProvider.toggleTheme(),
                 ),
               ),
-              // محتوى الصفحة
               Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 20,
+                  ),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.person_add_alt_1, size: 90, color: Colors.white),
+                        const Icon(
+                          Icons.person_add_alt_1,
+                          size: 90,
+                          color: Colors.white,
+                        ),
                         const SizedBox(height: 15),
                         const Text(
-                          "Create Your Account",
+                          'Create Your Account',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 28,
@@ -221,31 +163,47 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 25),
-
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: Colors.white24),
                           ),
                           child: Column(
                             children: [
                               _buildTextField(
-                                  controller: _emailController,
-                                  label: "Email",
-                                  icon: Icons.email_outlined,
-                                  validatorMsg: "Enter your email"),
+                                controller: _firstNameController,
+                                label: 'First Name',
+                                icon: Icons.badge_outlined,
+                                validatorMsg: 'Enter your first name',
+                              ),
                               const SizedBox(height: 20),
                               _buildTextField(
-                                  controller: _passwordController,
-                                  label: "Password",
-                                  icon: Icons.lock_outline,
-                                  isPassword: true,
-                                  validatorMsg: "Password must be at least 6 characters"),
+                                controller: _lastNameController,
+                                label: 'Last Name',
+                                icon: Icons.badge,
+                                validatorMsg: 'Enter your last name',
+                              ),
+                              const SizedBox(height: 20),
+                              _buildTextField(
+                                controller: _emailController,
+                                label: 'Email',
+                                icon: Icons.email_outlined,
+                                validatorMsg: 'Enter your email',
+                              ),
+                              const SizedBox(height: 20),
+                              _buildTextField(
+                                controller: _passwordController,
+                                label: 'Password',
+                                icon: Icons.lock_outline,
+                                isPassword: true,
+                                validatorMsg:
+                                    'Password must be at least 6 characters',
+                              ),
                               const SizedBox(height: 20),
                               const Text(
-                                "I am a...",
+                                'I am a...',
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Colors.white,
@@ -254,28 +212,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                               const SizedBox(height: 10),
                               ToggleButtons(
-                                isSelected: [
-                                  selectedRole == "Entrepreneur",
-                                  selectedRole == "Investor",
+                                isSelected: <bool>[
+                                  selectedRole == 'entrepreneur',
+                                  selectedRole == 'investor',
                                 ],
                                 borderRadius: BorderRadius.circular(12),
-                                fillColor: AppColors.button,
+                                fillColor: AppColors.accent,
                                 selectedColor: AppColors.heading,
                                 color: Colors.white,
-                                onPressed: (index) {
+                                onPressed: (int index) {
                                   setState(() {
-                                    selectedRole =
-                                        index == 0 ? "Entrepreneur" : "Investor";
+                                    selectedRole = index == 0
+                                        ? 'entrepreneur'
+                                        : 'investor';
                                   });
                                 },
-                                children: const [
+                                children: const <Widget>[
                                   Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                    child: Text("presence owner", style: TextStyle(fontSize: 16)),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 10,
+                                    ),
+                                    child: Text(
+                                      'Entrepreneur',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
                                   ),
                                   Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                    child: Text("Investor", style: TextStyle(fontSize: 16)),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 10,
+                                    ),
+                                    child: Text(
+                                      'Investor',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -283,47 +254,98 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 30),
-
-                        _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                        isLoading
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : ElevatedButton(
                                 onPressed: _signUpWithEmail,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.button,
+                                  backgroundColor: AppColors.accent,
                                   foregroundColor: AppColors.heading,
                                   shape: const StadiumBorder(),
-                                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 50,
+                                    vertical: 16,
+                                  ),
                                 ),
                                 child: const Text(
-                                  "Sign Up",
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  'Sign Up',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                         const SizedBox(height: 25),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _socialButton('images/6.webp', _signInWithGoogle),
-                            const SizedBox(width: 20),
-                            _socialButton('images/7.webp', () {}),
-                          ],
+                        Text(
+                          'Or sign up with',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 16,
+                          ),
                         ),
-
+                        const SizedBox(height: 15),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: isLoading ? null : _signUpWithGoogle,
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.white54),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              backgroundColor:
+                                  Colors.white.withValues(alpha: 0.1),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 12),
+                                  child: Image.asset(
+                                    'images/7.webp',
+                                    width: 28,
+                                    height: 28,
+                                    errorBuilder: (
+                                      BuildContext context,
+                                      Object error,
+                                      StackTrace? stackTrace,
+                                    ) =>
+                                        const Icon(Icons.account_circle, size: 28),
+                                  ),
+                                ),
+                                const Text(
+                                  'Sign up with Google',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 25),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(
-                              "Already have an account? ",
+                              'Already have an account? ',
                               style: TextStyle(color: Colors.white70),
                             ),
                             GestureDetector(
                               onTap: () => Navigator.pop(context),
                               child: const Text(
-                                "Login",
+                                'Login',
                                 style: TextStyle(
-                                  color: AppColors.button,
+                                  color: AppColors.accent,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -357,39 +379,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        fillColor: Colors.white.withValues(alpha: 0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
       ),
       style: const TextStyle(color: Colors.white),
-      validator: (value) =>
+      validator: (String? value) =>
           (value == null || value.isEmpty) ? validatorMsg : null,
     );
   }
 
-  Widget _socialButton(String image, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(50),
-      child: Container(
-        width: 65,
-        height: 65,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Image.asset(image),
-      ),
-    );
-  }
 }

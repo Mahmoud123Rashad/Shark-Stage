@@ -1,7 +1,11 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../core/theme/app_spacing.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui_card.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String firstName;
@@ -24,6 +28,7 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _emailController;
@@ -50,6 +55,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _saveProfile() {
+    if (!_formKey.currentState!.validate()) return;
     Navigator.pop(context, {
       'firstName': _firstNameController.text,
       'lastName': _lastNameController.text,
@@ -70,54 +76,88 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // صورة البروفايل
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 60,
-                backgroundImage: _selectedImage != null
-                    ? FileImage(_selectedImage!)
-                    : const AssetImage('images/profile.jpeg') as ImageProvider,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            _buildTextField("First Name", _firstNameController),
-            _buildTextField("Last Name", _lastNameController),
-            _buildTextField("Email", _emailController),
-            _buildTextField("Phone", _phoneController),
-
-            const SizedBox(height: 25),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xl,
+        ),
+        child: UiCard(
+          title: 'Update your profile',
+          subtitle:
+              'Keep your contact details up to date to build trust with investors.',
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: AppColors.soft,
+                    backgroundImage: _selectedImage != null
+                        ? FileImage(_selectedImage!)
+                        : const AssetImage('images/profile.jpeg')
+                            as ImageProvider,
+                    child: _selectedImage == null
+                        ? const Icon(Icons.camera_alt, color: AppColors.primary)
+                        : null,
+                  ),
                 ),
-              ),
-              onPressed: _saveProfile,
-              child: const Text("Save Changes",
-                  style: TextStyle(color: Colors.white, fontSize: 16)),
+                const SizedBox(height: AppSpacing.lg),
+                _buildTextField(
+                  label: "First Name",
+                  controller: _firstNameController,
+                ),
+                _buildTextField(
+                  label: "Last Name",
+                  controller: _lastNameController,
+                ),
+                _buildTextField(
+                  label: "Email",
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (String? value) =>
+                      value != null && value.contains('@')
+                          ? null
+                          : 'Enter a valid email address',
+                ),
+                _buildTextField(
+                  label: "Phone",
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ElevatedButton.icon(
+                  onPressed: _saveProfile,
+                  icon: const Icon(Icons.save),
+                  label: const Text("Save changes"),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: TextField(
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: TextFormField(
         controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+        keyboardType: keyboardType,
+        validator: validator ?? (String? value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Please enter $label';
+          }
+          return null;
+        },
+        decoration: InputDecoration(labelText: label),
       ),
     );
   }

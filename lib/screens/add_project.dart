@@ -7,14 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_colors.dart';
 
-class Add_project extends StatefulWidget {
-  const Add_project({super.key});
+class AddProject extends StatefulWidget {
+  const AddProject({super.key});
 
   @override
-  _Add_projectState createState() => _Add_projectState();
+  State<AddProject> createState() => _AddProjectState();
 }
 
-class _Add_projectState extends State<Add_project> {
+class _AddProjectState extends State<AddProject> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _detailsController = TextEditingController();
@@ -87,6 +87,7 @@ class _Add_projectState extends State<Add_project> {
       final imageSnap = await imageRef
           .putFile(_projectImage!)
           .whenComplete(() {});
+      if (!mounted) return;
       final imageUrl = await imageSnap.ref.getDownloadURL();
 
       String? pdfUrl;
@@ -95,6 +96,7 @@ class _Add_projectState extends State<Add_project> {
           'projects/${user.uid}/pdfs/${DateTime.now().millisecondsSinceEpoch}.pdf',
         );
         final pdfSnap = await pdfRef.putFile(_pdfFile!).whenComplete(() {});
+        if (!mounted) return;
         pdfUrl = await pdfSnap.ref.getDownloadURL();
       }
 
@@ -112,6 +114,7 @@ class _Add_projectState extends State<Add_project> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Project saved successfully")),
       );
@@ -123,11 +126,14 @@ class _Add_projectState extends State<Add_project> {
         saleType = 'Full';
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error saving project: $e")));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -150,7 +156,7 @@ class _Add_projectState extends State<Add_project> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 100),
           child: Card(
-            color: Colors.white.withOpacity(0.95),
+            color: Colors.white.withValues(alpha: 0.95),
             elevation: 12,
             shadowColor: AppColors.shadow,
             shape: RoundedRectangleBorder(
@@ -192,7 +198,9 @@ class _Add_projectState extends State<Add_project> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
                                 ),
                                 color: AppColors.soft,
                               ),
@@ -242,7 +250,7 @@ class _Add_projectState extends State<Add_project> {
                     const SizedBox(height: 12),
 
                     DropdownButtonFormField<String>(
-                      value: saleType,
+                      initialValue: saleType,
                       items: const [
                         DropdownMenuItem(
                           value: 'Full',
@@ -314,7 +322,7 @@ class _Add_projectState extends State<Add_project> {
                         : ElevatedButton(
                             onPressed: _saveProject,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.button,
+                              backgroundColor: AppColors.accent,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
