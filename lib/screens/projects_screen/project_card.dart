@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../project_details/project_details_screen.dart';
+import '../../utils/project_image.dart';
 class ProjectCard extends StatelessWidget {
   final Map<String, dynamic> project;
 
@@ -13,9 +14,7 @@ class ProjectCard extends StatelessWidget {
     final title = project["title"] ?? "Untitled Project";
     final description = project["shortDesc"] ?? "No description";
     final price = project["totalPrice"] ?? 0;
-    final imageUrl = (project["images"] != null && project["images"].isNotEmpty)
-        ? project["images"][0]
-        : "https://images.unsplash.com/photo-1506765515384-028b60a970df?auto=format&fit=crop&w=800&q=60";
+    final imageUrl = resolveProjectImage(project);
 
     return Card(
       color: theme.cardColor.withOpacity(isDark ? 0.3 : 0.9),

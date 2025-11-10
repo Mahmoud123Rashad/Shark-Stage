@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../utils/project_image.dart';
 
 class ProjectDetailsBody extends StatelessWidget {
   final Map<String, dynamic> project;
@@ -13,16 +13,15 @@ class ProjectDetailsBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (project["images"] != null && project["images"].isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                project["images"][0],
-                height: 250,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              resolveProjectImage(project),
+              height: 250,
+              width: double.infinity,
+              fit: BoxFit.cover,
             ),
+          ),
           const SizedBox(height: 20),
 
           Text(
