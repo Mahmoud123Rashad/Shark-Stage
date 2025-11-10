@@ -52,20 +52,103 @@ class _ProjectFormState extends State<ProjectForm> {
             _controller.priceController,
             type: TextInputType.number,
           ),
+          ValueListenableBuilder<String>(
+            valueListenable: _controller.category,
+            builder: (context, value, _) {
+              return DropdownButtonFormField<String>(
+                value: value,
+                decoration: InputDecoration(
+                  labelText: "Category",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                items: _controller.categoryOptions
+                    .map(
+                      (category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (selected) {
+                  if (selected != null) {
+                    setState(() {
+                      _controller.category.value = selected;
+                    });
+                  }
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          ValueListenableBuilder<String>(
+            valueListenable: _controller.status,
+            builder: (context, value, _) {
+              return DropdownButtonFormField<String>(
+                value: value,
+                decoration: InputDecoration(
+                  labelText: "Status",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                items: _controller.statusOptions
+                    .map(
+                      (entry) => DropdownMenuItem(
+                        value: entry,
+                        child: Text(entry[0].toUpperCase() + entry.substring(1)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (selected) {
+                  if (selected != null) {
+                    setState(() {
+                      _controller.status.value = selected;
+                    });
+                  }
+                },
+              );
+            },
+          ),
           const SizedBox(height: 12),
-          _controller.buildSaleTypeDropdown(context, _updateFormState),
-          const SizedBox(height: 12),
-          if (_controller.saleType.value == 'Partial')
-            _controller.buildTextField(
-              "Available Percentage (%)",
-              _controller.percentageController,
-              type: TextInputType.number,
-            ),
-          _controller.buildPdfUploader(context, _updateFormState),
+          _controller.buildTextField(
+            "Expected ROI (%)",
+            _controller.roiController,
+            type: TextInputType.number,
+          ),
+          _controller.buildTextField(
+            "Available Percentage (%)",
+            _controller.percentageController,
+            type: TextInputType.number,
+            hintText: "Optional",
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return null;
+              }
+              final parsed = double.tryParse(value);
+              if (parsed == null || parsed < 0 || parsed > 100) {
+                return "Enter a value between 0 and 100";
+              }
+              return null;
+            },
+          ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () => _controller.saveProject(context),
-            child: const Text("Save Project"),
+            onPressed: _controller.isLoading
+                ? null
+                : () async {
+                    setState(() {});
+                    await _controller.saveProject(context);
+                    setState(() {});
+                  },
+            child: _controller.isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text("Save Project"),
           ),
         ],
       ),

@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 import 'auth_storage.dart';
 
@@ -30,9 +33,10 @@ class ApiService {
   static Future<Map<String, String>> _buildHeaders({
     bool auth = false,
     Map<String, String>? headers,
+    bool jsonContentType = true,
   }) async {
     final result = <String, String>{
-      'Content-Type': 'application/json',
+      if (jsonContentType) 'Content-Type': 'application/json',
       if (headers != null) ...headers,
     };
 
@@ -147,6 +151,51 @@ class ApiService {
     print("⬅️ Response (${response.statusCode}): ${response.body}");
     _maybeHandleUnauthorized(response.statusCode);
     return response.statusCode == 200;
+  }
+
+  static Future<Map<String, dynamic>> postMultipart(
+    String endpoint, {
+    Map<String, String>? fields,
+    Map<String, File>? files,
+    bool auth = false,
+    Map<String, String>? headers,
+  }) async {
+    final url = _resolve(endpoint);
+    print("➡️ POST (multipart) $url");
+
+    final request = http.MultipartRequest('POST', url);
+    request.headers.addAll(
+      await _buildHeaders(
+        auth: auth,
+        headers: headers,
+        jsonContentType: false,
+      ),
+    );
+
+    if (fields != null && fields.isNotEmpty) {
+      request.fields.addAll(fields);
+    }
+
+    if (files != null && files.isNotEmpty) {
+      for (final entry in files.entries) {
+        final file = entry.value;
+        if (file.path.isEmpty || !file.existsSync()) continue;
+        final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            entry.key,
+            file.path,
+            contentType: MediaType.parse(mimeType),
+          ),
+        );
+      }
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    print("⬅️ Response (${response.statusCode}): ${response.body}");
+    _maybeHandleUnauthorized(response.statusCode);
+    return _parseResponse(response);
   }
 
   static void _maybeHandleUnauthorized(int statusCode) {

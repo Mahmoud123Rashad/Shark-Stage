@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -17,14 +17,30 @@ class ProjectController {
   final detailsController = TextEditingController();
   final priceController = TextEditingController();
   final percentageController = TextEditingController();
+  final roiController = TextEditingController();
 
-  final ValueNotifier<String> saleType = ValueNotifier<String>('Full');
+  static const List<String> _categoryOptions = [
+    'Technology',
+    'E-Commerce',
+    'Food',
+    'Health',
+    'Education',
+    'Real Estate',
+    'Industrial',
+    'Other',
+  ];
+
+  static const List<String> _statusOptions = ['active', 'closed'];
+
+  final ValueNotifier<String> category =
+      ValueNotifier<String>(_categoryOptions.first);
+  final ValueNotifier<String> status =
+      ValueNotifier<String>(_statusOptions.first);
 
   final ImagePicker _picker = ImagePicker();
   final String? ownerId;
 
   File? projectImage;
-  File? pdfFile;
   bool isLoading = false;
 
   Future<String?> _resolveOwnerId() async {
@@ -46,25 +62,16 @@ class ProjectController {
     }
   }
 
-  Future<void> pickPdf(BuildContext context, VoidCallback onUpdate) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
-    if (result != null && result.files.single.path != null) {
-      pdfFile = File(result.files.single.path!);
-      onUpdate();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PDF selected')),
-      );
-    }
-  }
+  List<String> get categoryOptions => List.unmodifiable(_categoryOptions);
+  List<String> get statusOptions => List.unmodifiable(_statusOptions);
 
   Widget buildTextField(
     String label,
     TextEditingController controller, {
     TextInputType type = TextInputType.text,
     int maxLines = 1,
+    String? hintText,
+    String? Function(String?)? validator,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -72,10 +79,11 @@ class ProjectController {
         controller: controller,
         keyboardType: type,
         maxLines: maxLines,
-        validator: (value) =>
-            (value == null || value.isEmpty) ? "Required" : null,
+        validator: validator ??
+            (value) => (value == null || value.isEmpty) ? "Required" : null,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hintText,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
@@ -96,37 +104,6 @@ class ProjectController {
     );
   }
 
-  Widget buildPdfUploader(BuildContext context, VoidCallback onUpdate) {
-    return ElevatedButton(
-      onPressed: () => pickPdf(context, onUpdate),
-      child: Text(
-        pdfFile == null
-            ? "Upload Project PDF"
-            : "PDF Selected: ${pdfFile!.path.split('/').last}",
-      ),
-    );
-  }
-
-  Widget buildSaleTypeDropdown(
-    BuildContext context,
-    void Function(String) onUpdate,
-  ) {
-    return DropdownButtonFormField<String>(
-      value: saleType.value,
-      items: const [
-        DropdownMenuItem(value: 'Full', child: Text("Sell Full Project")),
-        DropdownMenuItem(value: 'Partial', child: Text("Sell Part of Project")),
-      ],
-      onChanged: (value) {
-        if (value != null) {
-          saleType.value = value;
-          onUpdate(value);
-        }
-      },
-      decoration: const InputDecoration(labelText: "Sale Type"),
-    );
-  }
-
   Future<void> saveProject(BuildContext context) async {
     if (!formKey.currentState!.validate()) return;
 
@@ -142,35 +119,54 @@ class ProjectController {
     final totalPrice =
         parsedPrice != null && parsedPrice >= 0 ? parsedPrice : 0.0;
 
-    final payload = <String, dynamic>{
+    final parsedRoi = double.tryParse(roiController.text.trim());
+    if (parsedRoi == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Expected ROI must be a number.")),
+      );
+      return;
+    }
+
+    final fields = <String, String>{
       "title": titleController.text.trim(),
       "shortDesc": shortDescController.text.trim(),
       "description": detailsController.text.trim(),
-      "totalPrice": totalPrice,
+      "totalPrice": totalPrice.toString(),
       "owner": resolvedOwnerId,
-      "status": "active",
-      "expectedROI": 15,
-      "availablePercentage": saleType.value == 'Partial'
-          ? int.tryParse(percentageController.text.trim()) ?? 100
-          : 100,
-      "category": {
-        "en": "Technology",
-        "ar": "تكنولوجيا",
-      },
-      "potentialRisks": [],
-      "keyBenefits": [],
-      "managementTeam": [],
+      "status": status.value,
+      "expectedROI": parsedRoi.toString(),
+      "category": jsonEncode({"en": category.value}),
     };
+
+    final availablePercentageText = percentageController.text.trim();
+    if (availablePercentageText.isNotEmpty) {
+      final parsedPercentage = double.tryParse(availablePercentageText);
+      if (parsedPercentage == null || parsedPercentage < 0 || parsedPercentage > 100) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Available percentage must be between 0 and 100."),
+          ),
+        );
+        return;
+      }
+      fields["availablePercentage"] = parsedPercentage.toString();
+    }
+
+    final files = <String, File>{};
+    if (projectImage != null) {
+      files["image"] = projectImage!;
+    }
 
     try {
       isLoading = true;
-      final response = await ApiService.post(
+      final response = await ApiService.postMultipart(
         'projects/add',
-        body: payload,
+        fields: fields,
+        files: files.isNotEmpty ? files : null,
         auth: true,
       );
-      final status = response['status'] as int? ?? 500;
-      if (status == 201 && response['success'] == true) {
+      final statusCode = response['status'] as int? ?? 500;
+      if (statusCode == 201 && response['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Project added successfully")),
         );
@@ -180,13 +176,14 @@ class ProjectController {
         detailsController.clear();
         priceController.clear();
         percentageController.clear();
-        saleType.value = 'Full';
+        roiController.clear();
+        category.value = _categoryOptions.first;
+        status.value = _statusOptions.first;
         projectImage = null;
-        pdfFile = null;
       } else {
         final message = response['message'] ??
             response['error'] ??
-            'Failed to add project';
+            'Failed to add project (status $statusCode)';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message.toString())),
         );
