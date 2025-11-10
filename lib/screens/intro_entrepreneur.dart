@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'login_screen.dart';
+import 'login/login_screen.dart';
 
 class IntroEntrepreneurScreen extends StatefulWidget {
   const IntroEntrepreneurScreen({super.key});

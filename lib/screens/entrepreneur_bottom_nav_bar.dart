@@ -1,18 +1,26 @@
 import 'package:finial_project/screens/add-project.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'entrepreneur_dashboard.dart';
-import 'projects_screen.dart';
-import 'profile_screen.dart';
-import 'settings_screen.dart';
+import 'entrepreneur_dashboard/entrepreneur_dashboard.dart';
+import 'profile/profile_screen.dart';
+import 'projects_screen/projects_screen.dart';
+import 'settings_screen/settings_screen.dart';
 
 class EntrepreneurBottomNavBar extends StatefulWidget {
-  final String email; // ضيفنا الإيميل هنا
+  final String email;
+  final String? userId;
+  final String? role;
 
-  const EntrepreneurBottomNavBar({super.key, required this.email});
+  const EntrepreneurBottomNavBar({
+    super.key,
+    required this.email,
+    this.userId,
+    this.role,
+  });
 
   @override
-  State<EntrepreneurBottomNavBar> createState() => _EntrepreneurBottomNavBarState();
+  State<EntrepreneurBottomNavBar> createState() =>
+      _EntrepreneurBottomNavBarState();
 }
 
 class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
@@ -23,11 +31,10 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
   @override
   void initState() {
     super.initState();
-    // نمرر الإيميل للبروفايل
     _pages = [
       const ProjectsScreen(),
-EntrepreneurDashboard(email: widget.email),
-      const Add_project(),
+      const EntrepreneurDashboard(),
+      const AddProjectScreen(),
       ProfileScreen(email: '',),
       const SettingsScreen(),
     ];
@@ -55,7 +62,8 @@ EntrepreneurDashboard(email: widget.email),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: "Add"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline), label: "Add"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
         ],

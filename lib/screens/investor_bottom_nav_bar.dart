@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'projects_screen.dart';
-import 'investor_dashboard.dart';
-import 'profile_screen.dart';
-import 'settings_screen.dart';
+import 'investor_dashboard/investor_dashboard.dart';
+import 'profile/profile_screen.dart';
+import 'projects_screen/projects_screen.dart';
+import 'settings_screen/settings_screen.dart';
 
 class InvestorBottomNavBar extends StatefulWidget {
-  final String email; // استلام الإيميل من صفحة اللوجن
+  final String email;
+  final String? userId;
+  final String? role;
 
-  const InvestorBottomNavBar({super.key, required this.email});
+  const InvestorBottomNavBar({
+    super.key,
+    required this.email,
+    this.userId,
+    this.role,
+  });
 
   @override
   State<InvestorBottomNavBar> createState() => _InvestorBottomNavBarState();
@@ -24,10 +31,15 @@ class _InvestorBottomNavBarState extends State<InvestorBottomNavBar> {
     super.initState();
 
     _pages = [
-      ProjectsScreen(),
-      InvestorDashboard(email:'' ),
-      ProfileScreen(email: '',),
-      SettingsScreen(),
+      ProjectsScreen(
+        userId: widget.userId,
+        role: widget.role,
+      ),
+      InvestorDashboard(
+        userId: widget.userId,
+      ),
+      ProfileScreen(email: widget.email),
+      const SettingsScreen(),
     ];
   }
 

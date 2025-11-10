@@ -1,19 +1,14 @@
 import 'dart:convert';
-import 'package:finial_project/screens/projects_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class EntrepreneurDashboard extends StatefulWidget {
-  final String email; // ✅ استقبل الإيميل من المستخدم
+  final String email;
 
   const EntrepreneurDashboard({super.key, required this.email});
 
   @override
   State<EntrepreneurDashboard> createState() => _EntrepreneurDashboardState();
-
-  void onTabChanged(int i) {
-    i--;
-  }
 }
 
 class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
@@ -21,24 +16,25 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
   Map<String, dynamic>? _userData;
   List<dynamic> _projects = [];
 
+  bool _isNotifLoading = true;
+  List<dynamic> _notifications = [];
+
   final String baseUrl = "https://sharkserver-production.up.railway.app";
 
   @override
   void initState() {
     super.initState();
     _fetchUserDashboard();
+    _fetchNotifications();
   }
 
   Future<void> _fetchUserDashboard() async {
     try {
-      final uri = Uri.parse(
-        "$baseUrl/auth/getUserByEmail?email=${widget.email}",
-      );
+      final uri = Uri.parse("$baseUrl/auth/getUserByEmail?email=${widget.email}");
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         setState(() {
           _userData = data['user'] ?? {};
           _projects = data['projects'] ?? [];
@@ -46,7 +42,6 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
         });
       } else {
         setState(() => _isLoading = false);
-        debugPrint("Failed to load dashboard data");
       }
     } catch (e) {
       debugPrint("Error fetching dashboard data: $e");
@@ -54,13 +49,82 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
     }
   }
 
-  Widget _statCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Future<void> _fetchNotifications() async {
+    setState(() => _isNotifLoading = true);
+    try {
+      final uri = Uri.parse("$baseUrl/notifications/user"); // endpoint خاص بالمستخدم
+      final response = await http.get(uri, headers: {
+        "Content-Type": "application/json",
+        // لو عندك توكن:
+        // "Authorization": "Bearer YOUR_TOKEN_HERE"
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _notifications = data['userNotifications'] ?? [];
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching notifications: $e");
+    } finally {
+      setState(() => _isNotifLoading = false);
+    }
+  }
+
+  Future<void> _markAsRead(String id) async {
+    try {
+      final uri = Uri.parse("$baseUrl/notifications/$id/read");
+      final response = await http.put(uri, headers: {
+        "Content-Type": "application/json",
+      });
+
+      if (response.statusCode == 200) {
+        setState(() {
+          final index = _notifications.indexWhere((n) => n['_id'] == id);
+          if (index != -1) _notifications[index]['isRead'] = true;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error marking notification as read: $e");
+    }
+  }
+
+  Widget _notificationTile(BuildContext context, Map notif) {
+    final theme = Theme.of(context);
+    final isRead = notif['isRead'] ?? false;
+
+    return InkWell(
+      onTap: () => _markAsRead(notif['_id']),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isRead
+              ? Colors.grey.withOpacity(0.2)
+              : theme.cardColor.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.notifications, color: theme.colorScheme.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                notif['message'] ?? '',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+            if (!isRead)
+              const Icon(Icons.circle, size: 10, color: Colors.redAccent),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- بقى باقي الـ Dashboard كما هو ---
+  Widget _statCard(BuildContext context, String title, String value, IconData icon, Color color) {
     final theme = Theme.of(context);
 
     return Expanded(
@@ -91,20 +155,13 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
-                  ),
-                ),
+                Text(title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.textTheme.bodySmall?.color?.withOpacity(0.7))),
                 const SizedBox(height: 6),
-                Text(
-                  value,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
+                Text(value,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
               ],
             ),
           ],
@@ -113,12 +170,7 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
     );
   }
 
-  Widget _projectCard(
-    BuildContext context,
-    String projectName,
-    String status,
-    double progress,
-  ) {
+  Widget _projectCard(BuildContext context, String projectName, String status, double progress) {
     final theme = Theme.of(context);
 
     return Container(
@@ -138,12 +190,8 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            projectName,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(projectName,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(status, style: theme.textTheme.bodySmall),
           const SizedBox(height: 8),
@@ -151,7 +199,6 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
             value: progress,
             backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
             color: theme.colorScheme.primary,
-            borderRadius: BorderRadius.circular(6),
             minHeight: 6,
           ),
         ],
@@ -167,8 +214,7 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final name =
-        "${_userData?['firstName'] ?? ''} ${_userData?['lastName'] ?? ''}";
+    final name = "${_userData?['firstName'] ?? ''} ${_userData?['lastName'] ?? ''}";
     final projectsCount = _projects.length.toString();
     final earnings = _userData?['earnings']?.toString() ?? "₤ 0";
     final orders = _userData?['orders']?.toString() ?? "0";
@@ -179,97 +225,56 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            // غير التاب الحالي إلى صفحة المشاريع
-            // Navigator.pop(context); // لو داخل ب push
-            // أو لو dashboard داخل bottom nav مباشرة
-            // widget.onTabChanged(0);
-          },
+          onPressed: () {},
         ),
-        title: Text(
-          "Entrepreneur Dashboard",
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text("Entrepreneur Dashboard",
+            style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: theme.appBarTheme.backgroundColor ?? Colors.black87,
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Welcome, $name 👋",
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text("Welcome, $name 👋", style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text(
-              "Here's a quick overview of your performance today",
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text("Here's a quick overview of your performance today", style: theme.textTheme.bodyMedium),
             const SizedBox(height: 20),
             Row(
               children: [
-                _statCard(
-                  context,
-                  "Projects",
-                  projectsCount,
-                  Icons.business_center,
-                  Colors.deepPurple,
-                ),
-                _statCard(
-                  context,
-                  "Earnings",
-                  earnings,
-                  Icons.attach_money,
-                  Colors.green,
-                ),
+                _statCard(context, "Projects", projectsCount, Icons.business_center, Colors.deepPurple),
+                _statCard(context, "Earnings", earnings, Icons.attach_money, Colors.green),
               ],
             ),
             Row(
               children: [
-                _statCard(
-                  context,
-                  "Orders",
-                  orders,
-                  Icons.shopping_cart,
-                  Colors.orange,
-                ),
-                _statCard(
-                  context,
-                  "Clients",
-                  clients,
-                  Icons.people_alt,
-                  Colors.teal,
-                ),
+                _statCard(context, "Orders", orders, Icons.shopping_cart, Colors.orange),
+                _statCard(context, "Clients", clients, Icons.people_alt, Colors.teal),
               ],
             ),
             const SizedBox(height: 20),
-            Text(
-              "Current Projects",
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text("Current Projects", style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             if (_projects.isEmpty)
               const Center(child: Text("No projects found"))
             else
-              ..._projects.map(
-                (p) => _projectCard(
+              ..._projects.map((p) => _projectCard(
                   context,
                   p['name'] ?? 'Unnamed Project',
                   p['status'] ?? 'Unknown',
                   (p['progress'] ?? 0.0).toDouble(),
-                ),
-              ),
+                )),
+
+            const SizedBox(height: 20),
+            Text("Notifications", style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            _isNotifLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: _notifications.map((n) => _notificationTile(context, n)).toList(),
+                  ),
           ],
         ),
       ),
