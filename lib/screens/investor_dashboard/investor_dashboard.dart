@@ -1,84 +1,162 @@
+import 'package:finial_project/controllers/dashboard_controller.dart';
+import 'package:finial_project/screens/dashboard/dashboard_widgets.dart';
 import 'package:flutter/material.dart';
-import '../../widgets/notification_title.dart';
-import '../../widgets/investor_project_card.dart';
-import '../../widgets/investor_stat_card.dart';
 
-class InvestorDashboard extends StatelessWidget {
-  final String? userId;
+class InvestorDashboard extends StatefulWidget {
   const InvestorDashboard({super.key, this.userId});
+
+  final String? userId;
+
+  @override
+  State<InvestorDashboard> createState() => _InvestorDashboardState();
+}
+
+class _InvestorDashboardState extends State<InvestorDashboard> {
+  late final DashboardController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = DashboardController(userIdOverride: widget.userId)
+      ..addListener(_onControllerUpdate);
+    _controller.load();
+  }
+
+  void _onControllerUpdate() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller
+      ..removeListener(_onControllerUpdate)
+      ..dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final data = _controller.data;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: colorScheme.primary,
-        title: const Text("Investor Dashboard", style: TextStyle(color: Colors.white)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: CircleAvatar(
-              backgroundColor: colorScheme.secondary,
-              child: Icon(Icons.person, color: colorScheme.onSecondary),
+        title: const Text('Investor Dashboard'),
+      ),
+      body: _buildBody(data),
+    );
+  }
+
+  Widget _buildBody(DashboardData? data) {
+    if (_controller.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_controller.error != null) {
+      return DashboardErrorState(
+        message: _controller.error!,
+        onRetry: _controller.load,
+      );
+    }
+    if (data == null) {
+      return const Center(child: Text('No data available'));
+    }
+
+    final stats = data.stats;
+    final colorScheme = Theme.of(context).colorScheme;
+    final statItems = [
+      DashboardStatDefinition(
+        label: 'Portfolio projects',
+        value: stats.totalProjects.toString(),
+        icon: Icons.business_outlined,
+        color: colorScheme.primary,
+        progress: 1,
+      ),
+      DashboardStatDefinition(
+        label: 'Invested capital',
+        value: _formatCurrency(stats.investedCapital),
+        icon: Icons.trending_up,
+        color: colorScheme.secondary,
+        progress: (stats.averageProgress / 100).clamp(0, 1),
+      ),
+      DashboardStatDefinition(
+        label: 'Avg. ROI',
+        value: '${stats.averageRoi.toStringAsFixed(1)}%',
+        icon: Icons.percent,
+        color: Colors.amber,
+        progress: (stats.averageRoi.clamp(0, 100)) / 100,
+      ),
+    ];
+
+    return RefreshIndicator(
+      onRefresh: _controller.load,
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  DashboardStatGrid(items: statItems),
+                  const SizedBox(height: 16),
+                  DashboardTrendCard(
+                    title: 'Monthly performance',
+                    subtitle:
+                        'Track the momentum of your SharkStage portfolio over time.',
+                    points: data.trend,
+                  ),
+                  const SizedBox(height: 16),
+                  DashboardAllocationCard(
+                    title: 'Capital allocation',
+                    subtitle:
+                        'Diversify across sectors to balance risk and compound returns.',
+                    slices: data.allocation,
+                  ),
+                  const SizedBox(height: 24),
+                  const DashboardSectionTitle(
+                    title: 'Portfolio Projects',
+                    subtitle:
+                        'Review your current investments and follow their momentum.',
+                  ),
+                  const SizedBox(height: 12),
+                  DashboardProjectList(
+                    projects: data.projects,
+                    emptyMessage:
+                        'Once you invest in projects, they will appear here.',
+                    showInvested: true,
+                  ),
+                  const SizedBox(height: 24),
+                  const DashboardSectionTitle(
+                    title: 'Notifications',
+                    subtitle: 'Stay on top of the latest updates.',
+                  ),
+                  const SizedBox(height: 12),
+                  if (data.notifications.isEmpty)
+                    const DashboardEmptyCard(
+                      icon: Icons.notifications_none,
+                      title: 'No notifications yet',
+                      subtitle: 'Updates about your investments will show here.',
+                    )
+                  else
+                    ...data.notifications.toTiles(),
+                ],
+              ),
             ),
           ),
         ],
       ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Statistics Cards ---
-            Row(
-              children: const [
-                Expanded(child: StatCard(label: "Projects", value: "12", icon: Icons.business)),
-                Expanded(child: StatCard(label: "Total Invested", value: "\$45,000", icon: Icons.attach_money)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: const [
-                Expanded(child: StatCard(label: "Monthly Profit", value: "\$5,200", icon: Icons.trending_up)),
-                Expanded(child: StatCard(label: "Growth", value: "12%", icon: Icons.show_chart)),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-            Text(
-              "Recent Projects",
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onBackground,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            const ProjectCard(title: "Tech Startup", investment: "Investment: \$20,000", status: "Ongoing"),
-            const ProjectCard(title: "Organic Foods", investment: "Investment: \$10,000", status: "Completed"),
-            const ProjectCard(title: "Real Estate", investment: "Investment: \$15,000", status: "Ongoing"),
-
-            const SizedBox(height: 24),
-            Text(
-              "Notifications",
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onBackground,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            const NotificationTile(message: "New report available for Tech Startup."),
-            const NotificationTile(message: "You received profit from Organic Foods."),
-            const NotificationTile(message: "Upcoming meeting with Real Estate team."),
-          ],
-        ),
-      ),
     );
+  }
+
+  String _formatCurrency(double amount) {
+    if (amount >= 1000000) {
+      return '\$${(amount / 1000000).toStringAsFixed(1)}M';
+    }
+    if (amount >= 1000) {
+      return '\$${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return '\$${amount.toStringAsFixed(0)}';
   }
 }
