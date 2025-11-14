@@ -167,19 +167,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     controller: controller,
     readOnly: readOnly,
     // النص لونه يتكيف مع الخلفية (onBackground)
-    style: TextStyle(color: colorScheme.onBackground), 
+    style: TextStyle(color: colorScheme.onSurface), 
     decoration: InputDecoration(
      // لون الأيقونة يتكيف
-     prefixIcon: Icon(icon, color: colorScheme.onBackground.withOpacity(0.7)),
+     prefixIcon: Icon(icon, color: colorScheme.onSurface.withOpacity(0.7)),
      labelText: label,
-     labelStyle: TextStyle(color: colorScheme.onBackground.withOpacity(0.7)),
+     labelStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.7)),
      filled: true,
      // لون التعبئة يتكيف مع الوضع الفاتح والداكن
      fillColor: isDark ? Colors.white10 : Colors.grey.shade200, 
      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
      enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: colorScheme.onBackground.withOpacity(0.06)),
+      borderSide: BorderSide(color: colorScheme.onSurface.withOpacity(0.06)),
      ),
      focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),

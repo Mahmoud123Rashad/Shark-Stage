@@ -126,6 +126,7 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
                     emptyMessage:
                         'Add a project from the add screen to start attracting investors.',
                     showInvested: false,
+                    onRefresh: _controller.load,
                   ),
                   const SizedBox(height: 24),
                   const DashboardSectionTitle(

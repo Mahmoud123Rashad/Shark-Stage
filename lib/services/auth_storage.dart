@@ -59,7 +59,7 @@ class AuthStorage {
       };
     }
     String? readString(dynamic value) =>
-        value == null ? null : value.toString();
+        value?.toString();
 
     return {
       'id': readString(stored['_id'] ?? stored['id']),

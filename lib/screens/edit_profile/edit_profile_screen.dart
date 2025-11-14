@@ -59,8 +59,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
     setState(() => _isLoading = false);
 
-    if (result == null || result.containsKey('error')) {
-      _showSnack(result?['error'] ?? "Unknown error");
+    if (result.containsKey('error')) {
+      _showSnack(result['error'] ?? "Unknown error");
     } else {
       Navigator.pop(context, {
         'firstName': result['firstName'],

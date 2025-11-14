@@ -3,8 +3,9 @@ import '../controllers/project_controlller.dart';
 
 class ProjectForm extends StatefulWidget {
   final String? ownerId;
+  final String? projectId;
 
-  const ProjectForm({super.key, this.ownerId});
+  const ProjectForm({super.key, this.ownerId, this.projectId});
 
   @override
   State<ProjectForm> createState() => _ProjectFormState();
@@ -12,11 +13,25 @@ class ProjectForm extends StatefulWidget {
 
 class _ProjectFormState extends State<ProjectForm> {
   late final ProjectController _controller;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _controller = ProjectController(ownerId: widget.ownerId);
+    _controller = ProjectController(
+      ownerId: widget.ownerId,
+      projectId: widget.projectId,
+    );
+    _loadProjectIfNeeded();
+  }
+
+  Future<void> _loadProjectIfNeeded() async {
+    if (widget.projectId != null && widget.projectId!.isNotEmpty) {
+      await _controller.loadProject();
+    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   void _updateFormState([String? newValue]) {
@@ -26,13 +41,18 @@ class _ProjectFormState extends State<ProjectForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
     return Form(
       key: _controller.formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            "Add New Project",
+            _controller.isEditMode ? "Edit Project" : "Add New Project",
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.bold),
@@ -56,7 +76,7 @@ class _ProjectFormState extends State<ProjectForm> {
             valueListenable: _controller.category,
             builder: (context, value, _) {
               return DropdownButtonFormField<String>(
-                value: value,
+                initialValue: value,
                 decoration: InputDecoration(
                   labelText: "Category",
                   border: OutlineInputBorder(
@@ -86,7 +106,7 @@ class _ProjectFormState extends State<ProjectForm> {
             valueListenable: _controller.status,
             builder: (context, value, _) {
               return DropdownButtonFormField<String>(
-                value: value,
+                initialValue: value,
                 decoration: InputDecoration(
                   labelText: "Status",
                   border: OutlineInputBorder(
@@ -148,7 +168,7 @@ class _ProjectFormState extends State<ProjectForm> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text("Save Project"),
+                : Text(_controller.isEditMode ? "Update Project" : "Save Project"),
           ),
         ],
       ),

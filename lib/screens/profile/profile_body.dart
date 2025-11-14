@@ -146,22 +146,22 @@ class _ProfileBodyState extends State<ProfileBody> {
                   ProfileInfoCard(
                       label: "First Name",
                       value: firstName,
-                      valueColor: colorScheme.onBackground),
+                      valueColor: colorScheme.onSurface),
                   const SizedBox(height: 16),
                   ProfileInfoCard(
                       label: "Last Name",
                       value: lastName,
-                      valueColor: colorScheme.onBackground),
+                      valueColor: colorScheme.onSurface),
                   const SizedBox(height: 16),
                   ProfileInfoCard(
                       label: "Email",
                       value: email,
-                      valueColor: colorScheme.onBackground),
+                      valueColor: colorScheme.onSurface),
                   const SizedBox(height: 16),
                   ProfileInfoCard(
                       label: "Phone",
                       value: phone.isNotEmpty ? phone : "Not set yet",
-                      valueColor: colorScheme.onBackground),
+                      valueColor: colorScheme.onSurface),
 
                   const SizedBox(height: 40),
 

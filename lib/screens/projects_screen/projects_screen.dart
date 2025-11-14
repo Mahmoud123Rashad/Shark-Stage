@@ -96,7 +96,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                             _error!,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.onBackground,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 16),

@@ -77,11 +77,15 @@ class _ProjectOffersScreenState extends State<ProjectOffersScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  offer["offeredBy"]["name"] ?? "Unknown User",
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                Expanded(
+                                  child: Text(
+                                    offer["offeredBy"]?["firstName"] != null && offer["offeredBy"]?["lastName"] != null
+                                        ? "${offer["offeredBy"]["firstName"]} ${offer["offeredBy"]["lastName"]}"
+                                        : offer["offeredBy"]?["name"]?.toString() ?? "Unknown User",
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 Container(
@@ -123,6 +127,32 @@ class _ProjectOffersScreenState extends State<ProjectOffersScreen> {
                                   ),
                                 ),
                               ),
+                            if (offer["status"] == "pending") ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: () => _rejectOffer(offer["_id"]?.toString() ?? ""),
+                                    icon: const Icon(Icons.close, size: 18),
+                                    label: const Text('Reject'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton.icon(
+                                    onPressed: () => _acceptOffer(offer["_id"]?.toString() ?? ""),
+                                    icon: const Icon(Icons.check, size: 18),
+                                    label: const Text('Accept'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -130,5 +160,114 @@ class _ProjectOffersScreenState extends State<ProjectOffersScreen> {
                   },
                 ),
     );
+  }
+
+  Future<void> _acceptOffer(String offerId) async {
+    if (offerId.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Accept Offer'),
+        content: const Text('Are you sure you want to accept this offer?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Accept'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await ProjectOffersService.acceptOffer(offerId);
+    
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Offer accepted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _loadOffers(); // Reload offers
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to accept offer'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _rejectOffer(String offerId) async {
+    if (offerId.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Offer'),
+        content: const Text('Are you sure you want to reject this offer?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await ProjectOffersService.rejectOffer(offerId);
+    
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Offer rejected successfully'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      _loadOffers(); // Reload offers
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to reject offer'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

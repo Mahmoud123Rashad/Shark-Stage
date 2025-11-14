@@ -10,7 +10,7 @@ class AboutAppScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     // Adapting colors for Dark/Light mode compatibility
-    final primaryTextColor = colorScheme.onBackground;
+    final primaryTextColor = colorScheme.onSurface;
     final secondaryTextColor = primaryTextColor.withOpacity(0.7);
     final cardColor = isDark ? const Color(0xFF161B22) : Colors.white;
 
@@ -177,14 +177,14 @@ class AboutAppScreen extends StatelessWidget {
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onBackground,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               ],

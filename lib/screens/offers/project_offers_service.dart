@@ -4,9 +4,12 @@ class ProjectOffersService {
   static Future<List<dynamic>> fetchOffers(String projectId) async {
     try {
       // استخدم get الموجود في ApiService مباشرة
-      final response = await ApiService.get('offer/received?projectId=$projectId');
+      final response = await ApiService.get(
+        'offers/received?projectId=$projectId',
+        auth: true,
+      );
 
-      if (response != null && response['offers'] != null) {
+      if (response['offers'] != null) {
         return List<dynamic>.from(response['offers']);
       }
 
@@ -14,6 +17,34 @@ class ProjectOffersService {
     } catch (e) {
       print("Error fetching offers: $e");
       return [];
+    }
+  }
+
+  static Future<bool> acceptOffer(String offerId) async {
+    try {
+      final response = await ApiService.patch(
+        'offers/accept/$offerId',
+        auth: true,
+      );
+      final statusCode = response['status'] as int? ?? 500;
+      return statusCode == 200 && response['success'] == true;
+    } catch (e) {
+      print("Error accepting offer: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> rejectOffer(String offerId) async {
+    try {
+      final response = await ApiService.patch(
+        'offers/reject/$offerId',
+        auth: true,
+      );
+      final statusCode = response['status'] as int? ?? 500;
+      return statusCode == 200 && response['success'] == true;
+    } catch (e) {
+      print("Error rejecting offer: $e");
+      return false;
     }
   }
 }
