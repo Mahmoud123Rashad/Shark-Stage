@@ -1,6 +1,9 @@
 import 'package:finial_project/controllers/dashboard_controller.dart';
 import 'package:finial_project/screens/dashboard/dashboard_widgets.dart';
 import 'package:finial_project/screens/offers/sent_offers_screen.dart';
+import 'package:finial_project/screens/chat/conversations_list_screen.dart';
+import 'package:finial_project/screens/notifications/notifications_screen.dart';
+import 'package:finial_project/widgets/notification_badge.dart';
 import 'package:flutter/material.dart';
 
 class InvestorDashboard extends StatefulWidget {
@@ -46,6 +49,33 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Investor Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ConversationsListScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: NotificationBadge(
+              child: const Icon(Icons.notifications),
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
+              ).then((_) {
+                // Refresh badge when returning
+                setState(() {});
+              });
+            },
+          ),
+        ],
       ),
       body: _buildBody(data),
     );

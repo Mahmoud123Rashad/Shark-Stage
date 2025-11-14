@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../services/api_service.dart';
+import '../../widgets/notification_badge.dart';
 import '../chatbot/chatbot_screen.dart';
+import '../chat/conversations_list_screen.dart';
+import '../notifications/notifications_screen.dart';
 import 'project_list.dart';
 
 class ProjectsScreen extends StatefulWidget {
@@ -68,6 +71,33 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         title: const Text("Available Projects"),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ConversationsListScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: NotificationBadge(
+              child: const Icon(Icons.notifications),
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
+              ).then((_) {
+                // Refresh badge when returning
+                setState(() {});
+              });
+            },
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(

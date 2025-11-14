@@ -9,7 +9,6 @@ class InvestorDashboard extends StatefulWidget {
 }
 
 class _InvestorDashboardState extends State<InvestorDashboard> {
-  final NotificationService _notificationService = NotificationService();
   List<dynamic> _notifications = [];
   bool _isLoading = true;
 
@@ -21,7 +20,7 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
 
   Future<void> _fetchNotifications() async {
     setState(() => _isLoading = true);
-    final notifications = await _notificationService.getNotifications();
+    final notifications = await NotificationService.getNotifications();
     setState(() {
       _notifications = notifications;
       _isLoading = false;
@@ -29,7 +28,7 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
   }
 
   Future<void> _markAsRead(String id) async {
-    final success = await _notificationService.markAsRead(id);
+    final success = await NotificationService.markAsRead(id);
     if (success) {
       _fetchNotifications();
     }
