@@ -1,5 +1,6 @@
 import 'package:finial_project/controllers/dashboard_controller.dart';
 import 'package:finial_project/screens/dashboard/dashboard_widgets.dart';
+import 'package:finial_project/screens/offers/sent_offers_screen.dart';
 import 'package:flutter/material.dart';
 
 class InvestorDashboard extends StatefulWidget {
@@ -126,6 +127,29 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
                     emptyMessage:
                         'Once you invest in projects, they will appear here.',
                     showInvested: true,
+                    onRefresh: _controller.load,
+                  ),
+                  const SizedBox(height: 24),
+                  const DashboardSectionTitle(
+                    title: 'Sent Offers',
+                    subtitle: 'Manage your investment offers and track their status.',
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    margin: EdgeInsets.zero,
+                    child: ListTile(
+                      leading: const Icon(Icons.local_offer),
+                      title: const Text('View Sent Offers'),
+                      subtitle: const Text('See all your investment offers'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SentOffersScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 24),
                   const DashboardSectionTitle(

@@ -2,6 +2,7 @@ import 'package:finial_project/controllers/dashboard_controller.dart';
 import 'package:finial_project/controllers/project_controlller.dart';
 import 'package:finial_project/screens/edit_project/edit_project_screen.dart';
 import 'package:finial_project/screens/offers/project_offers_screen.dart';
+import 'package:finial_project/screens/project_details/project_details_screen.dart';
 import 'package:finial_project/widgets/notification_title.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -501,6 +502,16 @@ class DashboardProjectTile extends StatelessWidget {
                             theme.textTheme.bodySmall?.color?.withOpacity(0.7),
                       ),
                     ),
+                    if (showInvested && project.investedPercentage != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Amount: \$${project.investedAmount.toStringAsFixed(2)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.secondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -557,8 +568,28 @@ class DashboardProjectTile extends StatelessWidget {
                 ),
               ],
             ),
+          ] else ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _navigateToProjectDetails(context),
+                  icon: const Icon(Icons.visibility, size: 18),
+                  label: const Text('View Details'),
+                ),
+              ],
+            ),
           ],
         ],
+      ),
+    );
+  }
+
+  void _navigateToProjectDetails(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProjectDetailsScreen(projectId: project.id),
       ),
     );
   }
