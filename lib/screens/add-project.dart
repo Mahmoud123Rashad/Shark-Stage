@@ -20,9 +20,11 @@ class AddProjectScreen extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isDark
               ? const LinearGradient(
-                  colors: [Color(0xFF121212), Color(0xFF1E1E1E)])
+                  colors: [Color(0xFF121212), Color(0xFF1E1E1E)],
+                )
               : const LinearGradient(
-                  colors: [Color(0xFFE3F2FD), Color(0xFFFFFFFF)]),
+                  colors: [Color(0xFFE3F2FD), Color(0xFFFFFFFF)],
+                ),
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
