@@ -13,11 +13,9 @@ final GlobalKey<NavigatorState> _appNavigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // تحميل إعدادات الثيم من SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   final isDark = prefs.getBool('isDarkMode') ?? false;
 
-  // تهيئة API Service مع مراعاة قيم dart-define
   const runtimeApiBase = String.fromEnvironment(
     'SHARK_API_BASE',
     defaultValue: _defaultApiBase,
@@ -76,3 +74,10 @@ class SharkTankApp extends StatelessWidget {
     );
   }
 }
+
+
+// NovaEdge Solutions is a forward-thinking technology company dedicated to helping businesses transform their digital presence and achieve sustainable growth.
+// We specialize in creating modern, scalable, and user-focused solutions — from custom software and mobile applications to data-driven business intelligence and cloud integration.
+
+// Our mission is to bridge innovation with simplicity, enabling organizations to adapt quickly in a rapidly changing digital world.
+// With a passionate team of experts, we focus on delivering measurable results, maintaining transparency, and building long-term partnerships with our clients

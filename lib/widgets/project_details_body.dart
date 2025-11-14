@@ -1,3 +1,4 @@
+import 'package:finial_project/screens/offers/project_offers_screen.dart';
 import 'package:flutter/material.dart';
 import '../utils/project_image.dart';
 
@@ -69,7 +70,8 @@ class ProjectDetailsBody extends StatelessWidget {
           ),
           const SizedBox(height: 25),
 
-          if (project["keyBenefits"] != null && project["keyBenefits"].isNotEmpty)
+          if (project["keyBenefits"] != null &&
+              project["keyBenefits"].isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -85,7 +87,8 @@ class ProjectDetailsBody extends StatelessWidget {
             ),
           const SizedBox(height: 20),
 
-          if (project["potentialRisks"] != null && project["potentialRisks"].isNotEmpty)
+          if (project["potentialRisks"] != null &&
+              project["potentialRisks"].isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -99,6 +102,39 @@ class ProjectDetailsBody extends StatelessWidget {
                     .toList(),
               ],
             ),
+
+          const SizedBox(height: 40),
+
+          /// ************* زر عرض الـ Offers *************
+          Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 14,
+                ),
+                backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProjectOffersScreen(
+                      projectId: project["_id"],
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                "View Offers",
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
         ],
       ),
     );

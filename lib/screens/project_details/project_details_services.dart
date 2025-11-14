@@ -1,4 +1,5 @@
-import '../../services/api_service.dart';
+
+import 'package:finial_project/services/api_service.dart';
 
 class ProjectDetailsService {
   static Future<Map<String, dynamic>?> fetchProjectDetails(
@@ -18,7 +19,7 @@ class ProjectDetailsService {
       );
     } catch (e) {
       // ignore: avoid_print
-      print("❌ Error fetching project details: $e");
+      print(" Error fetching project details: $e");
       return null;
     }
   }
