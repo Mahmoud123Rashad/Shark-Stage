@@ -102,7 +102,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> put(
-    String endpoint, Map<String, String> map, {
+    String endpoint, {
     Map<String, dynamic>? body,
     bool auth = false,
     Map<String, String>? headers,
@@ -218,3 +218,4 @@ class ApiService {
     }
   }
 }
+
