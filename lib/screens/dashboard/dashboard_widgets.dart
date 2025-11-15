@@ -1,4 +1,8 @@
 import 'package:finial_project/controllers/dashboard_controller.dart';
+import 'package:finial_project/controllers/project_controlller.dart';
+import 'package:finial_project/screens/edit_project/edit_project_screen.dart';
+import 'package:finial_project/screens/offers/project_offers_screen.dart';
+import 'package:finial_project/screens/project_details/project_details_screen.dart';
 import 'package:finial_project/widgets/notification_title.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -411,11 +415,13 @@ class DashboardProjectList extends StatelessWidget {
     required this.projects,
     required this.emptyMessage,
     this.showInvested = true,
+    this.onRefresh,
   });
 
   final List<DashboardProject> projects;
   final String emptyMessage;
   final bool showInvested;
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -432,6 +438,7 @@ class DashboardProjectList extends StatelessWidget {
           .map((project) => DashboardProjectTile(
                 project: project,
                 showInvested: showInvested,
+                onRefresh: onRefresh,
               ))
           .toList(),
     );
@@ -443,10 +450,12 @@ class DashboardProjectTile extends StatelessWidget {
     super.key,
     required this.project,
     required this.showInvested,
+    this.onRefresh,
   });
 
   final DashboardProject project;
   final bool showInvested;
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -493,6 +502,16 @@ class DashboardProjectTile extends StatelessWidget {
                             theme.textTheme.bodySmall?.color?.withOpacity(0.7),
                       ),
                     ),
+                    if (showInvested && project.investedPercentage != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Amount: \$${project.investedAmount.toStringAsFixed(2)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.secondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -522,9 +541,110 @@ class DashboardProjectTile extends StatelessWidget {
             backgroundColor:
                 theme.colorScheme.secondary.withOpacity(0.1),
           ),
+          if (!showInvested) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _navigateToOffers(context),
+                  icon: const Icon(Icons.local_offer, size: 18),
+                  label: const Text('Offers'),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () => _navigateToEdit(context),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('Edit'),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () => _confirmDelete(context),
+                  icon: const Icon(Icons.delete, size: 18),
+                  label: const Text('Delete'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _navigateToProjectDetails(context),
+                  icon: const Icon(Icons.visibility, size: 18),
+                  label: const Text('View Details'),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  void _navigateToProjectDetails(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProjectDetailsScreen(projectId: project.id),
+      ),
+    );
+  }
+
+  void _navigateToOffers(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProjectOffersScreen(projectId: project.id),
+      ),
+    );
+  }
+
+  void _navigateToEdit(BuildContext context) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditProjectScreen(projectId: project.id),
+      ),
+    );
+    if (result == true && onRefresh != null) {
+      onRefresh!();
+    }
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Project'),
+        content: Text('Are you sure you want to delete "${project.title}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _deleteProject(context);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteProject(BuildContext context) async {
+    final controller = ProjectController(projectId: project.id);
+    final success = await controller.deleteProject(context);
+    if (success && onRefresh != null) {
+      onRefresh!();
+    }
   }
 }
 

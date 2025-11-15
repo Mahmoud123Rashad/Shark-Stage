@@ -1,34 +1,18 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'api_service.dart';
 
 class NotificationService {
-  final String baseUrl = "https://sharkserver-production.up.railway.app";
-
   // 🔹 جلب جميع الإشعارات
-  Future<List<dynamic>> getNotifications() async {
+  static Future<List<dynamic>> getNotifications() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-
-      if (token == null) {
-        print("⚠️ No token found");
-        return [];
-      }
-
-      final response = await http.get(
-        Uri.parse("$baseUrl/notifications"),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+      final response = await ApiService.get(
+        'notifications/user',
+        auth: true,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['notifications'] ?? [];
+      if (response['status'] == 200 && response['success'] == true) {
+        return response['userNotifications'] as List<dynamic>? ?? [];
       } else {
-        print("❌ Failed to load notifications: ${response.statusCode}");
+        print("❌ Failed to load notifications: ${response['status']}");
         return [];
       }
     } catch (e) {
@@ -38,25 +22,29 @@ class NotificationService {
   }
 
   // 🔹 تعليم إشعار كمقروء
-  Future<bool> markAsRead(String id) async {
+  static Future<bool> markAsRead(String id) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-
-      if (token == null) return false;
-
-      final response = await http.put(
-        Uri.parse("$baseUrl/notifications/$id/read"),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+      final response = await ApiService.patch(
+        'notifications/read/$id',
+        auth: true,
       );
 
-      return response.statusCode == 200;
+      final statusCode = response['status'] as int? ?? 500;
+      return statusCode == 200 && response['success'] == true;
     } catch (e) {
       print("🔥 Error marking notification as read: $e");
       return false;
+    }
+  }
+
+  // 🔹 الحصول على عدد الاشعارات غير المقروءة
+  static Future<int> getUnreadCount() async {
+    try {
+      final notifications = await getNotifications();
+      return notifications.where((n) => n['isRead'] != true).length;
+    } catch (e) {
+      print("🔥 Error getting unread count: $e");
+      return 0;
     }
   }
 }

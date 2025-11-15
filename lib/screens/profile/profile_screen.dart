@@ -24,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           "Profile",
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: colorScheme.onBackground, // يغير اللون حسب الـ theme
+            color: colorScheme.onSurface, // يغير اللون حسب الـ theme
           ),
         ),
         centerTitle: true,
@@ -33,8 +33,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              colorScheme.background.withOpacity(0.95),
-              colorScheme.background.withOpacity(1),
+              colorScheme.surface.withOpacity(0.95),
+              colorScheme.surface.withOpacity(1),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,

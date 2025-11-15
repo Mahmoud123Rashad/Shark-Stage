@@ -1,10 +1,15 @@
-import 'package:finial_project/widgets/project_form.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/project_form.dart';
 
-class AddProjectScreen extends StatelessWidget {
+class EditProjectScreen extends StatelessWidget {
+  final String projectId;
   final String? ownerId;
 
-  const AddProjectScreen({super.key, this.ownerId});
+  const EditProjectScreen({
+    super.key,
+    required this.projectId,
+    this.ownerId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +18,7 @@ class AddProjectScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Entrepreneur Dashboard"),
+        title: const Text("Edit Project"),
         centerTitle: true,
       ),
       body: Container(
@@ -28,9 +33,13 @@ class AddProjectScreen extends StatelessWidget {
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: ProjectForm(ownerId: ownerId),
+          child: ProjectForm(
+            ownerId: ownerId,
+            projectId: projectId,
+          ),
         ),
       ),
     );
   }
 }
+

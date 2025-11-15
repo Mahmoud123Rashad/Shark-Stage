@@ -56,7 +56,7 @@ class _SettingsListState extends State<SettingsList> {
      ),
      value: themeProvider.isDarkMode,
      onChanged: (_) => themeProvider.toggleTheme(),
-     activeColor: AppColors.button,
+     activeThumbColor: AppColors.button,
      inactiveThumbColor: Colors.grey,
     ),
     const Divider(),

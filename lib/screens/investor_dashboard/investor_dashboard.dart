@@ -35,7 +35,7 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
   Future<void> _fetchNotifications() async {
     setState(() => _isLoadingNotifications = true);
     try {
-      final data = await _notificationService.getNotifications();
+      final data = await NotificationService.getNotifications();
       if (mounted) {
         setState(() => _notifications = data);
       }
@@ -47,7 +47,7 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
   }
 
   Future<void> _markAsRead(String id) async {
-    final success = await _notificationService.markAsRead(id);
+    final success = await NotificationService.markAsRead(id);
     if (success) {
       setState(() {
         final index = _notifications.indexWhere((n) => n['_id'] == id);

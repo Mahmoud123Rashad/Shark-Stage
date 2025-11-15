@@ -146,8 +146,9 @@ class _SignUpFormState extends State<SignUpForm> {
                     : SignUpButtons(
                         onEmailSignUp: () async {
                           if (!_formKey.currentState!.validate() ||
-                              selectedRole == null)
+                              selectedRole == null) {
                             return;
+                          }
                           setState(() => _isLoading = true);
                           await _services.signUpWithEmail(
                             context: context,

@@ -25,7 +25,7 @@ class _IntroEntrepreneurScreenState extends State<IntroEntrepreneurScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
       setState(() {
         _currentIndex = (_currentIndex + 1) % _images.length;
       });
@@ -58,111 +58,72 @@ class _IntroEntrepreneurScreenState extends State<IntroEntrepreneurScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AnimatedSwitcher(
-                  duration: const Duration(seconds: 1),
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
-                  child: Container(
-                    key: ValueKey(_images[_currentIndex]),
-                    width: 330,
-                    height: 330,
-                    decoration: const BoxDecoration(shape: BoxShape.circle),
-                    child: ClipOval(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.asset(
-                            _images[_currentIndex],
-                            fit: BoxFit.cover,
-                            color: isDark
-                                ? Colors.black.withOpacity(0.3)
-                                : null, 
-                            colorBlendMode:
-                                isDark ? BlendMode.darken : BlendMode.srcOver,
-                          ),
-
-                          Center(
-                            child: Stack(
-                              children: [
-                                Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: isDark
-                                          ? Colors.white10
-                                          : Colors.white24,
-                                      width: 1,
-                                    ),
-                                  ),
-                                ),
-                                Center(
-                                  child: Container(
-                                    width: 2,
-                                    height: 260,
-                                    color: isDark
-                                        ? Colors.white12
-                                        : Colors.white24,
-                                  ),
-                                ),
-                                Center(
-                                  child: Container(
-                                    width: 260,
-                                    height: 2,
-                                    color: isDark
-                                        ? Colors.white12
-                                        : Colors.white24,
-                                  ),
-                                ),
-                              ],
+                Expanded(
+                  // <<<<< FIX: prevents overflow
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // ANIMATION FIXED
+                      AnimatedSwitcher(
+                        duration: const Duration(seconds: 1),
+                        transitionBuilder: (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
+                        child: SizedBox(
+                          key: ValueKey(_images[_currentIndex]),
+                          width: 260,
+                          height: 260,
+                          child: ClipOval(
+                            child: Image.asset(
+                              _images[_currentIndex],
+                              fit: BoxFit.cover,
+                              color: isDark
+                                  ? Colors.black.withOpacity(0.3)
+                                  : null,
+                              colorBlendMode: isDark
+                                  ? BlendMode.darken
+                                  : BlendMode.srcOver,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
 
-                const SizedBox(height: 35),
-                Text(
-                  "Project Owner",
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: isDark ? Colors.white : Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                    shadows: [
-                      Shadow(
-                        color: isDark
-                            ? Colors.blueAccent.withOpacity(0.4)
-                            : Colors.black38,
-                        blurRadius: 10,
+                      const SizedBox(height: 30),
+
+                      Text(
+                        "Project Owner",
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          "Share your idea with real investors and turn your dream into a successful business in the world of entrepreneurship.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 17,
+                            color: Colors.white70,
+                            height: 1.6,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 20),
-                Text(
-                  "Share your idea with real investors and turn your dream into a successful business in the world of entrepreneurship.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: isDark ? Colors.white70 : Colors.white70,
-                    height: 1.6,
-                  ),
-                ),
-
-                const SizedBox(height: 60),
-                Center(
+                // BUTTON AT BOTTOM
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isDark ? Colors.blueAccent : AppColors.button,
+                      backgroundColor: isDark
+                          ? Colors.blueAccent
+                          : AppColors.button,
                       foregroundColor: Colors.white,
                       shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(
@@ -170,15 +131,11 @@ class _IntroEntrepreneurScreenState extends State<IntroEntrepreneurScreen> {
                         vertical: 14,
                       ),
                       elevation: 8,
-                      shadowColor:
-                          isDark ? Colors.blueAccent.withOpacity(0.4) : Colors.black54,
                     ),
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
                       );
                     },
                     child: const Row(

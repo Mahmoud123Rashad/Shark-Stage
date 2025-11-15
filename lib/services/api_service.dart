@@ -198,6 +198,51 @@ class ApiService {
     return _parseResponse(response);
   }
 
+  static Future<Map<String, dynamic>> putMultipart(
+    String endpoint, {
+    Map<String, String>? fields,
+    Map<String, File>? files,
+    bool auth = false,
+    Map<String, String>? headers,
+  }) async {
+    final url = _resolve(endpoint);
+    print("➡️ PUT (multipart) $url");
+
+    final request = http.MultipartRequest('PUT', url);
+    request.headers.addAll(
+      await _buildHeaders(
+        auth: auth,
+        headers: headers,
+        jsonContentType: false,
+      ),
+    );
+
+    if (fields != null && fields.isNotEmpty) {
+      request.fields.addAll(fields);
+    }
+
+    if (files != null && files.isNotEmpty) {
+      for (final entry in files.entries) {
+        final file = entry.value;
+        if (file.path.isEmpty || !file.existsSync()) continue;
+        final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            entry.key,
+            file.path,
+            contentType: MediaType.parse(mimeType),
+          ),
+        );
+      }
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    print("⬅️ Response (${response.statusCode}): ${response.body}");
+    _maybeHandleUnauthorized(response.statusCode);
+    return _parseResponse(response);
+  }
+
   static void _maybeHandleUnauthorized(int statusCode) {
     if (statusCode == 401 || statusCode == 403) {
       unawaited(_handleUnauthorized());

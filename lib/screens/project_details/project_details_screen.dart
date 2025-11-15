@@ -1,6 +1,7 @@
+import 'package:finial_project/theme/app_colors.dart';
+import 'package:finial_project/widgets/project_details_body.dart';
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../widgets/project_details_body.dart';
+
 import 'project_details_services.dart';
 
 class ProjectDetailsScreen extends StatefulWidget {
