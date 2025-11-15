@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../services/api_service.dart';
 import '../../widgets/notification_badge.dart';
 import '../chatbot/chatbot_screen.dart';
@@ -92,27 +91,28 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   builder: (context) => const NotificationsScreen(),
                 ),
               ).then((_) {
-                // Refresh badge when returning
                 setState(() {});
               });
             },
           ),
         ],
       ),
+
       body: Container(
         decoration: BoxDecoration(
+          color: !isDark ? Colors.white : null,
           gradient: isDark
               ? const LinearGradient(
-                  colors: [Color(0xFF121212), Color(0xFF1E1E1E)],
-                )
-              : const LinearGradient(
                   colors: [
-                    Color.fromARGB(255, 42, 147, 238),
-                    Color.fromARGB(255, 74, 177, 246),
-                    Color.fromARGB(255, 145, 207, 234),
+                    Color(0xFF121212),
+                    Color(0xFF1E1E1E),
                   ],
-                ),
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+              : null,
         ),
+
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
@@ -140,6 +140,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   )
                 : ProjectList(projects: _projects),
       ),
+
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(

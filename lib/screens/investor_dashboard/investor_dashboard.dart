@@ -72,6 +72,7 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('Investor Dashboard'),
         actions: [
           if (widget.email != null)

@@ -99,7 +99,7 @@ class ProjectController {
       onTap: () => pickImage(context, onUpdate),
       child: Container(
         height: 150,
-        color: Colors.grey.shade200,
+        color: const Color.fromARGB(255, 211, 208, 208),
         alignment: Alignment.center,
         child: projectImage != null
             ? Image.file(projectImage!, fit: BoxFit.cover)

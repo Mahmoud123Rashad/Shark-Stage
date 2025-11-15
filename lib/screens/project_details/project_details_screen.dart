@@ -35,7 +35,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Project Details"),
-        backgroundColor: AppColors.button,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

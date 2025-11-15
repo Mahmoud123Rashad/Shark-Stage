@@ -68,31 +68,38 @@ class ProjectCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ProjectDetailsScreen(projectId: project["_id"]),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                label: const Text("View Full Project"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: const StadiumBorder(),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 25,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-            ),
+          Align(
+  alignment: Alignment.centerRight,
+  child: ElevatedButton(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ProjectDetailsScreen(projectId: project["_id"]),
+        ),
+      );
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: theme.colorScheme.primary,
+      foregroundColor: Colors.white,
+      shape: const StadiumBorder(),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 25,
+        vertical: 12,
+      ),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: const [
+        Text("View Full Project"),
+        SizedBox(width: 8),
+        Icon(Icons.arrow_forward_ios, size: 16),
+      ],
+    ),
+  ),
+),
+
           ],
         ),
       ),

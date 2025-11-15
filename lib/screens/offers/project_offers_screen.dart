@@ -47,7 +47,7 @@ class _ProjectOffersScreenState extends State<ProjectOffersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Project Offers"),
-        backgroundColor: AppColors.button,
+        backgroundColor:Theme.of(context).colorScheme.primary,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

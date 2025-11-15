@@ -37,7 +37,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Your AI Helper"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor:Theme.of(context).colorScheme.primary,
       ),
       body: Column(
         children: [
