@@ -1,28 +1,46 @@
 import 'package:finial_project/screens/add-project.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'entrepreneur_dashboard.dart';
-import 'projects_screen.dart';
-import 'profile_screen.dart';
-import 'settings_screen.dart';
+import 'entrepreneur_dashboard/entrepreneur_dashboard.dart';
+import 'profile/profile_screen.dart';
+import 'projects_screen/projects_screen.dart';
+import 'settings_screen/settings_screen.dart';
+import 'blog/blog_screen.dart';
 
 class EntrepreneurBottomNavBar extends StatefulWidget {
-  const EntrepreneurBottomNavBar({super.key});
+  final String email;
+  final String? userId;
+  final String? role;
+
+  const EntrepreneurBottomNavBar({
+    super.key,
+    required this.email,
+    this.userId,
+    this.role,
+  });
 
   @override
-  State<EntrepreneurBottomNavBar> createState() => _EntrepreneurBottomNavBarState();
+  State<EntrepreneurBottomNavBar> createState() =>
+      _EntrepreneurBottomNavBarState();
 }
 
 class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
-    ProjectsScreen(),
-    EntrepreneurDashboard(),
-    Add_project(),
-    ProfileScreen(),
-    SettingsScreen(),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const ProjectsScreen(),
+      const EntrepreneurDashboard(),
+      const BlogScreen(),
+      const AddProjectScreen(),
+      ProfileScreen(email: '',),
+      const SettingsScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -46,7 +64,9 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: "Add"),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: "Blog"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline), label: "Add"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
         ],

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'login_screen.dart';
+import 'login/login_screen.dart';
 
 class IntroEntrepreneurScreen extends StatefulWidget {
   const IntroEntrepreneurScreen({super.key});
@@ -25,7 +25,7 @@ class _IntroEntrepreneurScreenState extends State<IntroEntrepreneurScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
       setState(() {
         _currentIndex = (_currentIndex + 1) % _images.length;
       });
@@ -40,132 +40,102 @@ class _IntroEntrepreneurScreenState extends State<IntroEntrepreneurScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.mainGradient),
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const LinearGradient(
+                  colors: [Color(0xFF0A0E21), Color(0xFF1C1F2E)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+              : AppColors.mainGradient,
+        ),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                //  Sniper Image Slider 
-                AnimatedSwitcher(
-                  duration: const Duration(seconds: 1),
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
-                  child: Container(
-                    key: ValueKey(_images[_currentIndex]),
-                    width: 330,
-                    height: 330,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      // border: Border.all(
-                      //   color: AppColors.button,
-                      //   width: 4,
-                      // ),
-                      // boxShadow: [
-                      //   // BoxShadow(
-                      //   //   color: Colors.black.withOpacity(0.3),
-                      //   //   blurRadius: 15,
-                      //   //   offset: const Offset(0, 8),
-                      //   // ),
-                      // ],
-                    ),
-                    child: ClipOval(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.asset(
-                            _images[_currentIndex],
-                            fit: BoxFit.cover,
-                          ),
-                          //  Crosshair overlay
-                          Center(
-                            child: Stack(
-                              children: [
-                                Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                        color: Colors.white24, width: 1),
-                                  ),
-                                ),
-                                Center(
-                                  child: Container(
-                                    width: 2,
-                                    height: 260,
-                                    color: Colors.white24,
-                                  ),
-                                ),
-                                Center(
-                                  child: Container(
-                                    width: 260,
-                                    height: 2,
-                                    color: Colors.white24,
-                                  ),
-                                ),
-                              ],
+                Expanded(
+                  // <<<<< FIX: prevents overflow
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // ANIMATION FIXED
+                      AnimatedSwitcher(
+                        duration: const Duration(seconds: 1),
+                        transitionBuilder: (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
+                        child: SizedBox(
+                          key: ValueKey(_images[_currentIndex]),
+                          width: 260,
+                          height: 260,
+                          child: ClipOval(
+                            child: Image.asset(
+                              _images[_currentIndex],
+                              fit: BoxFit.cover,
+                              color: isDark
+                                  ? Colors.black.withOpacity(0.3)
+                                  : null,
+                              colorBlendMode: isDark
+                                  ? BlendMode.darken
+                                  : BlendMode.srcOver,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(height: 30),
+
+                      Text(
+                        "Project Owner",
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          "Share your idea with real investors and turn your dream into a successful business in the world of entrepreneurship.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 17,
+                            color: Colors.white70,
+                            height: 1.6,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
-                const SizedBox(height: 35),
-
-                const Text(
-                  "project owner",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    "Share your idea with real investors and turn your dream into a successful business in the world of entrepreneurship.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white70,
-                      height: 1.6,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 60),
-
-                Center(
+                // BUTTON AT BOTTOM
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.button,
-                      foregroundColor: AppColors.heading,
+                      backgroundColor: isDark
+                          ? Colors.blueAccent
+                          : AppColors.button,
+                      foregroundColor: Colors.white,
                       shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 40,
                         vertical: 14,
                       ),
-                      elevation: 6,
-                      shadowColor: Colors.black54,
+                      elevation: 8,
                     ),
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
                       );
                     },
                     child: const Row(
