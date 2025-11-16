@@ -51,7 +51,7 @@ class CategoriesSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 120,
+          height: 140,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -110,12 +110,13 @@ class _CategoryCard extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: category.color.withOpacity(0.2),
                   shape: BoxShape.circle,
@@ -123,26 +124,28 @@ class _CategoryCard extends StatelessWidget {
                 child: Icon(
                   category.icon,
                   color: category.color,
-                  size: 28,
+                  size: 24,
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                category.name,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
+              const SizedBox(height: 10),
+              Flexible(
+                child: Text(
+                  category.name,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
               Text(
                 '${category.projectCount} projects',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   color: theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
