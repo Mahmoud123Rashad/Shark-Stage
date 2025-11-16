@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/blog_service.dart';
 import '../../services/auth_storage.dart';
 import '../../widgets/blog_post_card.dart';
+import '../../widgets/blog/blog_hero_section.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/skeletons/skeleton_list.dart';
 import 'blog_post_details_screen.dart';
@@ -94,10 +95,22 @@ class _BlogScreenState extends State<BlogScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Blog'),
+        elevation: 0,
         actions: [
           if (_isLoggedIn)
             IconButton(
-              icon: const Icon(Icons.add),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.add,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+              ),
               onPressed: _showAddPostDialog,
               tooltip: 'New Post',
             ),
@@ -107,49 +120,86 @@ class _BlogScreenState extends State<BlogScreen> {
           ? const SkeletonList()
           : _error != null
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _error!,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.error,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: theme.colorScheme.error.withOpacity(0.5),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _loadPosts,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        Text(
+                          _error!,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: _loadPosts,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : _posts.isEmpty
-                  ? EmptyState(
-                      icon: Icons.article_outlined,
-                      title: 'No posts yet',
-                      subtitle: _isLoggedIn
-                          ? 'Be the first to share something!'
-                          : 'Check back later for new posts',
-                      actionLabel: _isLoggedIn ? 'Add Post' : null,
-                      onAction: _isLoggedIn ? _showAddPostDialog : null,
+                  ? Column(
+                      children: [
+                        const BlogHeroSection(),
+                        Expanded(
+                          child: EmptyState(
+                            icon: Icons.article_outlined,
+                            title: 'No posts yet',
+                            subtitle: _isLoggedIn
+                                ? 'Be the first to share something!'
+                                : 'Check back later for new posts',
+                            actionLabel: _isLoggedIn ? 'Add Post' : null,
+                            onAction: _isLoggedIn ? _showAddPostDialog : null,
+                          ),
+                        ),
+                      ],
                     )
                   : RefreshIndicator(
                       onRefresh: _loadPosts,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: _posts.length,
-                        itemBuilder: (context, index) {
-                          final post = _posts[index];
-                          final postId = post['_id']?.toString() ?? post['id']?.toString();
-                          if (postId == null || postId.isEmpty) return const SizedBox.shrink();
-                          return BlogPostCard(
-                            post: post,
-                            onTap: () => _navigateToPostDetails(postId),
-                          );
-                        },
+                      child: CustomScrollView(
+                        slivers: [
+                          // Hero Section
+                          const SliverToBoxAdapter(
+                            child: BlogHeroSection(),
+                          ),
+                          // Posts List
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            sliver: SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final post = _posts[index];
+                                  final postId = post['_id']?.toString() ?? post['id']?.toString();
+                                  if (postId == null || postId.isEmpty) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return BlogPostCard(
+                                    post: post,
+                                    onTap: () => _navigateToPostDetails(postId),
+                                  );
+                                },
+                                childCount: _posts.length,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
     );

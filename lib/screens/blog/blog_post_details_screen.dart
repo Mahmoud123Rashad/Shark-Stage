@@ -254,8 +254,8 @@ class _BlogPostDetailsScreenState extends State<BlogPostDetailsScreen> {
         ? name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join()
         : '?';
     return Container(
-      width: 48,
-      height: 48,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
@@ -264,6 +264,13 @@ class _BlogPostDetailsScreenState extends State<BlogPostDetailsScreen> {
             theme.colorScheme.secondary,
           ],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Center(
         child: Text(
@@ -271,7 +278,7 @@ class _BlogPostDetailsScreenState extends State<BlogPostDetailsScreen> {
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 20,
           ),
         ),
       ),
@@ -338,13 +345,39 @@ class _BlogPostDetailsScreenState extends State<BlogPostDetailsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Post Card
-                            Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: theme.brightness == Brightness.dark
+                                      ? [
+                                          theme.colorScheme.surface.withOpacity(0.6),
+                                          theme.colorScheme.surface.withOpacity(0.4),
+                                        ]
+                                      : [
+                                          Colors.white,
+                                          theme.colorScheme.primary.withOpacity(0.03),
+                                        ],
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary.withOpacity(
+                                      theme.brightness == Brightness.dark ? 0.2 : 0.08,
+                                    ),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 8),
+                                    spreadRadius: 0,
+                                  ),
+                                ],
                               ),
                               child: Padding(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(24),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -358,92 +391,155 @@ class _BlogPostDetailsScreenState extends State<BlogPostDetailsScreen> {
                                         final authorImage = author?['profilePicUrl']?.toString();
                                         return Row(
                                           children: [
-                                        if (authorImage != null && authorImage.isNotEmpty)
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(24),
-                                            child: AppNetworkImage(
-                                              imageUrl: authorImage,
-                                              width: 48,
-                                              height: 48,
-                                              fit: BoxFit.cover,
-                                              errorWidget: _buildAvatarPlaceholder(authorName, theme),
-                                              placeholder: _buildAvatarPlaceholder(authorName, theme),
-                                            ),
-                                          )
-                                        else
-                                          _buildAvatarPlaceholder(authorName, theme),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                authorName,
-                                                style: theme.textTheme.titleMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: theme.colorScheme.primary.withOpacity(0.3),
+                                                  width: 2,
                                                 ),
-                                              ),
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.access_time,
-                                                    size: 14,
-                                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    _formatTime(_post!['createdAt']?.toString()),
-                                                    style: theme.textTheme.bodySmall?.copyWith(
-                                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                                                    ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: theme.colorScheme.primary.withOpacity(0.2),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
                                                   ),
                                                 ],
                                               ),
-                                            ],
-                                          ),
-                                        ),
+                                              child: authorImage != null && authorImage.isNotEmpty
+                                                  ? ClipRRect(
+                                                      borderRadius: BorderRadius.circular(28),
+                                                      child: AppNetworkImage(
+                                                        imageUrl: authorImage,
+                                                        width: 56,
+                                                        height: 56,
+                                                        fit: BoxFit.cover,
+                                                        errorWidget: _buildAvatarPlaceholder(authorName, theme),
+                                                        placeholder: _buildAvatarPlaceholder(authorName, theme),
+                                                      ),
+                                                    )
+                                                  : _buildAvatarPlaceholder(authorName, theme),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    authorName,
+                                                    style: theme.textTheme.titleLarge?.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 18,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.access_time,
+                                                        size: 16,
+                                                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        _formatTime(_post!['createdAt']?.toString()),
+                                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ],
                                         );
                                       },
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 24),
                                     // Title
                                     Text(
                                       _post!['title']?.toString() ?? '',
-                                      style: theme.textTheme.headlineSmall?.copyWith(
+                                      style: theme.textTheme.headlineMedium?.copyWith(
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 28,
+                                        height: 1.3,
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
+                                    const SizedBox(height: 20),
                                     // Content
                                     Text(
                                       _post!['content']?.toString() ?? '',
                                       style: theme.textTheme.bodyLarge?.copyWith(
-                                        height: 1.6,
+                                        height: 1.8,
+                                        fontSize: 16,
+                                        color: theme.colorScheme.onSurface.withOpacity(0.9),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 32),
                             // Comments Section
-                            Text(
-                              'Comments (${_comments.length})',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.comment,
+                                    color: theme.colorScheme.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Comments (${_comments.length})',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 22,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             // Add Comment Form
                             if (_isLoggedIn)
-                              Card(
-                                elevation: 1,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: theme.brightness == Brightness.dark
+                                        ? [
+                                            theme.colorScheme.surface.withOpacity(0.5),
+                                            theme.colorScheme.surface.withOpacity(0.3),
+                                          ]
+                                        : [
+                                            Colors.white,
+                                            theme.colorScheme.primary.withOpacity(0.05),
+                                          ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: theme.colorScheme.primary.withOpacity(0.2),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.colorScheme.primary.withOpacity(0.1),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: const EdgeInsets.all(20),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
@@ -451,29 +547,62 @@ class _BlogPostDetailsScreenState extends State<BlogPostDetailsScreen> {
                                         controller: _commentController,
                                         decoration: InputDecoration(
                                           hintText: 'Write a comment...',
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                          hintStyle: TextStyle(
+                                            color: theme.colorScheme.onSurface.withOpacity(0.5),
                                           ),
-                                          contentPadding: const EdgeInsets.all(12),
+                                          filled: true,
+                                          fillColor: theme.brightness == Brightness.dark
+                                              ? theme.colorScheme.surface.withOpacity(0.5)
+                                              : Colors.grey[50],
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(16),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.primary.withOpacity(0.2),
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(16),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.primary.withOpacity(0.2),
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(16),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.primary,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          contentPadding: const EdgeInsets.all(16),
                                         ),
-                                        maxLines: 3,
+                                        maxLines: 4,
+                                        style: theme.textTheme.bodyLarge,
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 12),
                                       ElevatedButton.icon(
                                         onPressed: _isSubmittingComment ? null : _submitComment,
                                         icon: _isSubmittingComment
                                             ? const SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child: CircularProgressIndicator(strokeWidth: 2),
+                                                width: 18,
+                                                height: 18,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                ),
                                               )
                                             : const Icon(Icons.send, size: 18),
-                                        label: Text(_isSubmittingComment ? 'Posting...' : 'Comment'),
+                                        label: Text(_isSubmittingComment ? 'Posting...' : 'Post Comment'),
                                         style: ElevatedButton.styleFrom(
+                                          backgroundColor: theme.colorScheme.primary,
+                                          foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 8,
+                                            horizontal: 20,
+                                            vertical: 14,
                                           ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          elevation: 2,
                                         ),
                                       ),
                                     ],
