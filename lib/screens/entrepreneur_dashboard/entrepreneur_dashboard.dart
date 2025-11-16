@@ -3,7 +3,9 @@ import 'package:finial_project/screens/dashboard/dashboard_widgets.dart';
 import 'package:finial_project/screens/chat/conversations_list_screen.dart';
 import 'package:finial_project/screens/notifications/notifications_screen.dart';
 import 'package:finial_project/widgets/notification_badge.dart';
+import 'package:finial_project/widgets/skeletons/skeleton_list.dart';
 import 'package:flutter/material.dart';
+import 'package:finial_project/widgets/protected_screen.dart';
 
 class EntrepreneurDashboard extends StatefulWidget {
   const EntrepreneurDashboard({super.key, this.userId});
@@ -44,7 +46,7 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
     final theme = Theme.of(context);
     final data = _controller.data;
 
-    return Scaffold(
+    return ProtectedScreen(builder: (context) => Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Entrepreneur Dashboard'),
@@ -77,12 +79,12 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
         ],
       ),
       body: _buildBody(data),
-    );
+    ));
   }
 
   Widget _buildBody(DashboardData? data) {
     if (_controller.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonList(count: 6);
     }
     if (_controller.error != null) {
       return DashboardErrorState(

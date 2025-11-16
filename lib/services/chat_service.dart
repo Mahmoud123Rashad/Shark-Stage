@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'api_service.dart';
 import 'auth_storage.dart';
+import 'notification_service.dart';
 
 class ChatService {
   static IO.Socket? _socket;
@@ -59,6 +60,13 @@ class ChatService {
           if (conversationId != null && _messageStreams.containsKey(conversationId)) {
             _messageStreams[conversationId]!.add(data);
           }
+        }
+      });
+
+      // Listen for notifications
+      _socket!.on('notification', (data) {
+        if (data is Map<String, dynamic>) {
+          NotificationService.onNotificationReceived(data);
         }
       });
     } catch (e) {

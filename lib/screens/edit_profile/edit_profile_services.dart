@@ -10,6 +10,7 @@ class EditProfileService {
     required String email,
     required String phone,
     File? image,
+    Function(double)? onImageUploadProgress,
   }) async {
     try {
       final body = <String, dynamic>{

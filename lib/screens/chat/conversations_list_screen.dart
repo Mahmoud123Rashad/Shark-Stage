@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../services/chat_service.dart';
 import '../../services/auth_storage.dart';
 import 'chat_screen.dart';
+import '../../widgets/protected_screen.dart';
 
 class ConversationsListScreen extends StatefulWidget {
   const ConversationsListScreen({super.key});
@@ -89,7 +90,7 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return ProtectedScreen(builder: (context) => Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
         actions: [
@@ -198,7 +199,7 @@ class _ConversationsListScreenState extends State<ConversationsListScreen> {
                     },
                   ),
                 ),
-    );
+    ));
   }
 }
 

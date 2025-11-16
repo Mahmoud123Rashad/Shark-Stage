@@ -1,6 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/notification_service.dart';
+import '../../services/chat_service.dart';
+import '../project_details/project_details_screen.dart';
+import '../chat/chat_screen.dart';
+import '../offers/sent_offers_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -12,11 +17,48 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   List<dynamic> _notifications = [];
   bool _isLoading = true;
+  StreamSubscription<Map<String, dynamic>>? _notificationSubscription;
 
   @override
   void initState() {
     super.initState();
-    _loadNotifications();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    // Initialize socket connection
+    await ChatService.initializeSocket();
+    await NotificationService.initializeNotificationListener();
+
+    // Load initial notifications
+    await _loadNotifications();
+
+    // Listen for real-time notifications
+    _notificationSubscription = NotificationService.notificationStream.listen((notification) {
+      if (mounted) {
+        // Add new notification to the list
+        setState(() {
+          _notifications.insert(0, notification);
+          // Sort again to maintain order
+          _notifications.sort((a, b) {
+            final aRead = a['isRead'] == true;
+            final bRead = b['isRead'] == true;
+            if (aRead != bRead) {
+              return aRead ? 1 : -1;
+            }
+            final aDate = DateTime.tryParse(a['createdAt']?.toString() ?? '') ?? DateTime.now();
+            final bDate = DateTime.tryParse(b['createdAt']?.toString() ?? '') ?? DateTime.now();
+            return bDate.compareTo(aDate);
+          });
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadNotifications() async {
@@ -53,18 +95,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  void _handleNotificationTap(Map<String, dynamic> notification) {
-    final link = notification['link']?.toString();
-    if (link != null && link.isNotEmpty) {
-      // Navigate based on link
-      // This is a simplified version - you may need to parse the link
-      // and navigate to the appropriate screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Navigate to: $link')),
-      );
+  Future<void> _handleNotificationTap(Map<String, dynamic> notification) async {
+    final link = notification['link']?.toString() ?? '';
+    if (link.isNotEmpty) {
+      await _navigateByLink(link);
     }
 
-    // Mark as read if not already read
     if (notification['isRead'] != true) {
       final index = _notifications.indexWhere(
         (n) => n['_id']?.toString() == notification['_id']?.toString(),
@@ -73,6 +109,54 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _markAsRead(notification['_id']?.toString() ?? '', index);
       }
     }
+  }
+
+  Future<void> _navigateByLink(String link) async {
+    // normalize: ensure it starts with '/'
+    final path = link.startsWith('/') ? link : '/$link';
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+
+    if (segments.isEmpty) return;
+
+    if (segments[0] == 'projects' && segments.length >= 2) {
+      final id = segments[1];
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ProjectDetailsScreen(projectId: id)),
+      );
+      return;
+    }
+
+    if (segments[0] == 'chat' && segments.length >= 2) {
+      // final conversationId = segments[1];
+      // We don't have other participant meta in link; open empty with placeholder
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const ChatScreen(
+            conversationId: '',
+            otherParticipantName: 'Conversation',
+          ),
+        ),
+      );
+      // Note: for real conversation loading, ChatScreen can fetch messages by id; adjust constructor if needed
+      return;
+    }
+
+    if (segments[0] == 'account' && segments.length >= 2 && segments[1] == 'offers') {
+      if (!mounted) return;
+      // final summary = await AuthStorage.getUserSummary();
+      // final role = (summary['role'] ?? '').toLowerCase();
+      // For now, always open sent offers (investor). Owners already have per-project offers screens.
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const SentOffersScreen()),
+      );
+      return;
+    }
+
+    // Fallback
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unknown link: $link')));
   }
 
   IconData _getNotificationIcon(String? type) {

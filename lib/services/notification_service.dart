@@ -1,6 +1,27 @@
+import 'dart:async';
 import 'api_service.dart';
+import 'chat_service.dart';
 
 class NotificationService {
+  static final StreamController<Map<String, dynamic>> _notificationStreamController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  static Stream<Map<String, dynamic>> get notificationStream =>
+      _notificationStreamController.stream;
+
+  // Initialize Socket.IO listener for notifications
+  static Future<void> initializeNotificationListener() async {
+    await ChatService.initializeSocket();
+    // The socket is already initialized in ChatService, we just need to listen
+    // We'll add the listener in ChatService or create a separate socket connection
+    // For now, we'll use a callback approach
+  }
+
+  // Call this when a notification is received via Socket.IO
+  static void onNotificationReceived(Map<String, dynamic> notification) {
+    _notificationStreamController.add(notification);
+  }
+
   // 🔹 جلب جميع الإشعارات
   static Future<List<dynamic>> getNotifications() async {
     try {

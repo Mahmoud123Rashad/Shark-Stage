@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/chat_service.dart';
 import '../../services/auth_storage.dart';
+import '../../widgets/protected_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String conversationId;
   final String otherParticipantName;
   final String? otherParticipantImage;
+  final String? receiverId;
 
   const ChatScreen({
     super.key,
     required this.conversationId,
     required this.otherParticipantName,
     this.otherParticipantImage,
+    this.receiverId,
   });
 
   @override
@@ -28,10 +31,12 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isSending = false;
   String? _currentUserId;
   StreamSubscription<Map<String, dynamic>>? _messageSubscription;
+  late String _conversationId;
 
   @override
   void initState() {
     super.initState();
+    _conversationId = widget.conversationId;
     _initializeChat();
   }
 
@@ -39,25 +44,31 @@ class _ChatScreenState extends State<ChatScreen> {
     final userSummary = await AuthStorage.getUserSummary();
     _currentUserId = userSummary['id'];
 
-    // Initialize socket and join conversation
+    // Initialize socket
     await ChatService.initializeSocket();
-    ChatService.joinConversation(widget.conversationId);
 
-    // Load messages
-    await _loadMessages();
-
-    // Listen for new messages via Socket.IO
-    final messageStream = ChatService.getMessageStream(widget.conversationId);
-    if (messageStream != null) {
-      _messageSubscription = messageStream.listen((data) {
-        if (data['message'] != null) {
-          setState(() {
-            _messages.add(data['message']);
-          });
-          _scrollToBottom();
-        }
+    // If we already have a conversation, join and load messages
+    if (_conversationId.isNotEmpty) {
+      ChatService.joinConversation(_conversationId);
+      await _loadMessages();
+      final messageStream = ChatService.getMessageStream(_conversationId);
+      if (messageStream != null) {
+        _messageSubscription = messageStream.listen((data) {
+          if (data['message'] != null) {
+            setState(() {
+              _messages.add(data['message']);
+            });
+            _scrollToBottom();
+          }
+        });
+      }
+    } else {
+      // No conversation yet -> show empty UI without loading
+      setState(() {
+        _isLoading = false;
       });
     }
+
   }
 
   Future<void> _loadMessages() async {
@@ -65,7 +76,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _isLoading = true;
     });
 
-    final messages = await ChatService.getMessages(widget.conversationId);
+    final messages = await ChatService.getMessages(_conversationId);
     
     setState(() {
       _messages = messages;
@@ -92,47 +103,63 @@ class _ChatScreenState extends State<ChatScreen> {
     final content = _messageController.text.trim();
     if (content.isEmpty || _isSending) return;
 
-    // Get other participant ID from conversation
-    final conversations = await ChatService.getConversations();
-    Map<String, dynamic>? conversation;
-    try {
-      conversation = conversations.firstWhere(
-        (c) => c['_id']?.toString() == widget.conversationId,
-      ) as Map<String, dynamic>?;
-    } catch (e) {
-      conversation = null;
-    }
-    
-    if (conversation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Conversation not found')),
+    String? receiverId;
+    if (_conversationId.isEmpty) {
+      // Use provided receiverId when no conversation exists yet
+      receiverId = widget.receiverId;
+      if (receiverId == null || receiverId.isEmpty) {
+        // As a fallback, try to discover via conversations (best-effort)
+        final conversations = await ChatService.getConversations();
+        Map<String, dynamic>? conversation;
+        try {
+          conversation = conversations.firstWhere(
+            (c) => c['_id']?.toString() == _conversationId,
+          ) as Map<String, dynamic>?;
+        } catch (_) {
+          conversation = null;
+        }
+        if (conversation != null) {
+          final otherParticipant = ChatService.getOtherParticipant(
+            conversation,
+            _currentUserId ?? '',
+          );
+          receiverId = otherParticipant?['_id']?.toString() ?? otherParticipant?['id']?.toString();
+        }
+      }
+      if (receiverId == null || receiverId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to find recipient')),
+        );
+        return;
+      }
+    } else {
+      // Conversation exists -> resolve receiver from conversation
+      final conversations = await ChatService.getConversations();
+      Map<String, dynamic>? conversation;
+      try {
+        conversation = conversations.firstWhere(
+          (c) => c['_id']?.toString() == _conversationId,
+        ) as Map<String, dynamic>?;
+      } catch (_) {
+        conversation = null;
+      }
+      if (conversation == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Conversation not found')),
+        );
+        return;
+      }
+      final otherParticipant = ChatService.getOtherParticipant(
+        conversation,
+        _currentUserId ?? '',
       );
-      setState(() {
-        _isSending = false;
-      });
-      return;
-    }
-    
-    final otherParticipant = ChatService.getOtherParticipant(
-      conversation,
-      _currentUserId ?? '',
-    );
-    
-    if (otherParticipant == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to find recipient')),
-      );
-      return;
-    }
-
-    final receiverId = otherParticipant['_id']?.toString() ?? 
-                      otherParticipant['id']?.toString();
-    
-    if (receiverId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid recipient')),
-      );
-      return;
+      receiverId = otherParticipant?['_id']?.toString() ?? otherParticipant?['id']?.toString();
+      if (receiverId == null || receiverId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid recipient')),
+        );
+        return;
+      }
     }
 
     setState(() {
@@ -183,6 +210,23 @@ class _ChatScreenState extends State<ChatScreen> {
           }
         });
       }
+      // If this was a new conversation, capture its id and start realtime
+      if (_conversationId.isEmpty && result['conversationId'] != null) {
+        _conversationId = result['conversationId'].toString();
+        ChatService.joinConversation(_conversationId);
+        final stream = ChatService.getMessageStream(_conversationId);
+        _messageSubscription?.cancel();
+        if (stream != null) {
+          _messageSubscription = stream.listen((data) {
+            if (data['message'] != null) {
+              setState(() {
+                _messages.add(data['message']);
+              });
+              _scrollToBottom();
+            }
+          });
+        }
+      }
     }
   }
 
@@ -212,7 +256,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return ProtectedScreen(builder: (context) => Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
@@ -397,7 +441,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:finial_project/widgets/protected_screen.dart';
 import 'package:finial_project/controllers/dashboard_controller.dart';
 import 'package:finial_project/screens/dashboard/dashboard_widgets.dart';
+import 'package:finial_project/screens/investments/investments_screen.dart';
+import 'package:finial_project/widgets/skeletons/skeleton_list.dart';
 import '../../services/notification_service.dart';
 
 class InvestorDashboard extends StatefulWidget {
@@ -15,7 +18,6 @@ class InvestorDashboard extends StatefulWidget {
 
 class _InvestorDashboardState extends State<InvestorDashboard> {
   late final DashboardController _controller;
-  final NotificationService _notificationService = NotificationService();
   List<dynamic> _notifications = [];
   bool _isLoadingNotifications = true;
 
@@ -69,7 +71,7 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
     final theme = Theme.of(context);
     final data = _controller.data;
 
-    return Scaffold(
+    return ProtectedScreen(builder: (context) => Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         centerTitle: true,
@@ -86,12 +88,12 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
         ],
       ),
       body: _buildBody(data),
-    );
+    ));
   }
 
   Widget _buildBody(DashboardData? data) {
     if (_controller.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonList(count: 6);
     }
     if (_controller.error != null) {
       return DashboardErrorState(
@@ -167,6 +169,23 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
                   emptyMessage:
                       'Once you invest in projects, they will appear here.',
                   showInvested: true,
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: ListTile(
+                    leading: const Icon(Icons.history),
+                    title: const Text('Investment History'),
+                    subtitle: const Text('View all your investments'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const InvestmentsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 24),
                 const DashboardSectionTitle(

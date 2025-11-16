@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
+import '../services/chat_service.dart';
 
 class NotificationBadge extends StatefulWidget {
   final Widget child;
@@ -18,11 +20,33 @@ class NotificationBadge extends StatefulWidget {
 class _NotificationBadgeState extends State<NotificationBadge> {
   int _unreadCount = 0;
   bool _isLoading = true;
+  StreamSubscription<Map<String, dynamic>>? _notificationSubscription;
 
   @override
   void initState() {
     super.initState();
-    _loadUnreadCount();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    // Initialize socket connection
+    await ChatService.initializeSocket();
+    await NotificationService.initializeNotificationListener();
+
+    // Load initial count
+    await _loadUnreadCount();
+
+    // Listen for real-time notifications
+    _notificationSubscription = NotificationService.notificationStream.listen((notification) {
+      if (mounted) {
+        // Increment count when new notification arrives
+        setState(() {
+          if (notification['isRead'] != true) {
+            _unreadCount++;
+          }
+        });
+      }
+    });
   }
 
   Future<void> _loadUnreadCount() async {
@@ -33,6 +57,12 @@ class _NotificationBadgeState extends State<NotificationBadge> {
         _isLoading = false;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
   }
 
   @override

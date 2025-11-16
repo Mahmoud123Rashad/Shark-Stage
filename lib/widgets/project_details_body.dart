@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../utils/project_image.dart';
 import '../services/auth_storage.dart';
 import '../services/chat_service.dart';
+import 'app_network_image.dart';
 
 class ProjectDetailsBody extends StatefulWidget {
   final Map<String, dynamic> project;
@@ -89,53 +90,27 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody> {
         return;
       }
 
-      // Show loading indicator
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
       // Get owner name and image
       final ownerFirstName = owner['firstName']?.toString() ?? '';
       final ownerLastName = owner['lastName']?.toString() ?? '';
       final ownerName = '$ownerFirstName $ownerLastName'.trim();
       final ownerImage = owner['profilePicUrl']?.toString();
 
-      // Create default message
-      final projectTitle = widget.project['title']?.toString() ?? 'this project';
-      final defaultMessage = "Hello, I'm interested in your project: $projectTitle";
-
-      // Send message to start conversation
-      final result = await ChatService.sendMessage(ownerId, defaultMessage);
-
-      if (!mounted) return;
-      Navigator.pop(context); // Close loading dialog
-
-      if (result == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to start conversation'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      // Get conversation ID from response
-      final conversationId = result['conversationId']?.toString();
-      if (conversationId == null || conversationId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to get conversation ID'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
+      // Try find existing conversation with owner
+      String? conversationId;
+      try {
+        final conversations = await ChatService.getConversations();
+        for (final c in conversations) {
+          if (c is Map<String, dynamic>) {
+            final other = ChatService.getOtherParticipant(c, _currentUserId ?? '');
+            final otherId = other?['_id']?.toString() ?? other?['id']?.toString();
+            if (otherId == ownerId) {
+              conversationId = c['_id']?.toString();
+              break;
+            }
+          }
+        }
+      } catch (_) {}
 
       // Navigate to chat screen
       if (!mounted) return;
@@ -143,7 +118,8 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody> {
         context,
         MaterialPageRoute(
           builder: (context) => ChatScreen(
-            conversationId: conversationId,
+            conversationId: conversationId ?? '',
+            receiverId: ownerId,
             otherParticipantName: ownerName.isNotEmpty ? ownerName : 'Project Owner',
             otherParticipantImage: ownerImage,
           ),
@@ -170,11 +146,20 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              resolveProjectImage(widget.project),
+            child: AppNetworkImage(
+              imageUrl: resolveProjectImage(widget.project),
               height: 250,
               width: double.infinity,
               fit: BoxFit.cover,
+              placeholder: Container(
+                height: 250,
+                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+              ),
+              errorWidget: Container(
+                height: 250,
+                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+                child: const Icon(Icons.broken_image),
+              ),
             ),
           ),
           const SizedBox(height: 20),
