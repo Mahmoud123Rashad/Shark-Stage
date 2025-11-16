@@ -92,10 +92,21 @@ class ApiService {
   }) async {
     final url = _resolve(endpoint);
     print("➡️ GET $url");
-    final response = await http.get(
-      url,
-      headers: await _buildHeaders(auth: auth, headers: headers),
-    );
+    http.Response response;
+    try {
+      response = await http
+          .get(
+            url,
+            headers: await _buildHeaders(auth: auth, headers: headers),
+          )
+          .timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      print("⏳ GET timeout for $url");
+      return {
+        'status': 408,
+        'message': 'Request timeout',
+      };
+    }
     print("⬅️ Response (${response.statusCode}): ${response.body}");
     _maybeHandleUnauthorized(response.statusCode);
     return _parseResponse(response);
