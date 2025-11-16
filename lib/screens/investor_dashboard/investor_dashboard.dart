@@ -5,6 +5,7 @@ import 'package:finial_project/screens/dashboard/dashboard_widgets.dart';
 import 'package:finial_project/screens/investments/investments_screen.dart';
 import 'package:finial_project/widgets/skeletons/skeleton_list.dart';
 import '../../services/notification_service.dart';
+import '../../widgets/dashboard/dashboard_hero.dart';
 
 class InvestorDashboard extends StatefulWidget {
   final String? userId;
@@ -75,14 +76,20 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Investor Dashboard'),
+        title: const Text('Dashboard'),
+        elevation: 0,
         actions: [
           if (widget.email != null)
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Center(
-                child: Text(widget.email!,
-                    style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  widget.email!,
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
+                    fontSize: 12,
+                  ),
+                ),
               ),
             ),
         ],
@@ -114,6 +121,15 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
       },
       child: CustomScrollView(
         slivers: [
+          // Hero Section
+          SliverToBoxAdapter(
+            child: DashboardHero(
+              stats: {
+                'investedCapital': data.stats.investedCapital,
+                'averageRoi': data.stats.averageRoi,
+              },
+            ),
+          ),
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
@@ -204,34 +220,106 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
                 else
                   ..._notifications.map((n) {
                     final isRead = n['isRead'] ?? false;
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
                     return InkWell(
                       onTap: () => _markAsRead(n['_id']),
+                      borderRadius: BorderRadius.circular(16),
                       child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isRead
-                              ? Colors.grey.withOpacity(0.2)
-                              : colorScheme.surfaceVariant.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(10),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: isRead
+                                ? [
+                                    isDark
+                                        ? Colors.grey.withOpacity(0.2)
+                                        : Colors.grey.withOpacity(0.1),
+                                    isDark
+                                        ? Colors.grey.withOpacity(0.1)
+                                        : Colors.grey.withOpacity(0.05),
+                                  ]
+                                : [
+                                    colorScheme.primary.withOpacity(0.15),
+                                    colorScheme.primary.withOpacity(0.05),
+                                  ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isRead
+                                ? Colors.transparent
+                                : colorScheme.primary.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                          boxShadow: isRead
+                              ? []
+                              : [
+                                  BoxShadow(
+                                    color: colorScheme.primary.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.notifications,
-                                color: colorScheme.primary),
-                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: isRead
+                                    ? Colors.grey.withOpacity(0.2)
+                                    : colorScheme.primary.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.notifications,
+                                color: isRead
+                                    ? Colors.grey
+                                    : colorScheme.primary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
                             Expanded(
-                              child: Text(
-                                n['message'] ?? "",
-                                style: TextStyle(
-                                  color:
-                                      colorScheme.onSurface.withOpacity(0.8),
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    n['title'] ?? 'Notification',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    n['message'] ?? "",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             if (!isRead)
-                              const Icon(Icons.circle,
-                                  size: 10, color: Colors.redAccent),
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.redAccent.withOpacity(0.5),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
                           ],
                         ),
                       ),

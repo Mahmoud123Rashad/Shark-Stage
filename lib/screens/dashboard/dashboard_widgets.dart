@@ -79,16 +79,35 @@ class _DashboardStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  item.color.withOpacity(0.15),
+                  item.color.withOpacity(0.08),
+                ]
+              : [
+                  Colors.white,
+                  item.color.withOpacity(0.05),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: item.color.withOpacity(0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
-            blurRadius: 12,
+            color: item.color.withOpacity(isDark ? 0.3 : 0.15),
+            blurRadius: 16,
             offset: const Offset(0, 8),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -98,34 +117,58 @@ class _DashboardStatCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: item.color.withOpacity(0.12),
-                child: Icon(item.icon, color: item.color),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      item.color.withOpacity(0.3),
+                      item.color.withOpacity(0.2),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: item.color.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  item.icon,
+                  color: item.color,
+                  size: 28,
+                ),
               ),
               Text(
                 item.value,
-                style: theme.textTheme.headlineSmall?.copyWith(
+                style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
+                  fontSize: 24,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             item.label,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: item.progress.isFinite ? item.progress.clamp(0, 1) : 0,
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(6),
-            backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-            color: item.color,
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: item.progress.isFinite ? item.progress.clamp(0, 1) : 0,
+              minHeight: 8,
+              backgroundColor: item.color.withOpacity(0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(item.color),
+            ),
           ),
         ],
       ),
@@ -240,11 +283,27 @@ class DashboardTrendCard extends StatelessWidget {
                     spots: spots,
                     isCurved: true,
                     color: theme.colorScheme.primary,
-                    barWidth: 3,
-                    dotData: const FlDotData(show: false),
+                    barWidth: 4,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) =>
+                          FlDotCirclePainter(
+                        radius: 5,
+                        color: theme.colorScheme.primary,
+                        strokeWidth: 3,
+                        strokeColor: Colors.white,
+                      ),
+                    ),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: theme.colorScheme.primary.withOpacity(0.12),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          theme.colorScheme.primary.withOpacity(0.3),
+                          theme.colorScheme.primary.withOpacity(0.05),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -312,9 +371,9 @@ class DashboardAllocationCard extends StatelessWidget {
               color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           SizedBox(
-            height: 220,
+            height: 240,
             child: PieChart(
               PieChartData(
                 sections: slices
@@ -326,16 +385,29 @@ class DashboardAllocationCard extends StatelessWidget {
                             '${((entry.value.count / total) * 100).toStringAsFixed(0)}%',
                         value: entry.value.count.toDouble(),
                         color: _sliceColor(entry.key),
-                        radius: 70,
+                        radius: 80,
                         titleStyle: theme.textTheme.bodyMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        badgeWidget: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: _sliceColor(entry.key),
+                          ),
                         ),
                       ),
                     )
                     .toList(),
-                sectionsSpace: 2,
-                centerSpaceRadius: 30,
+                sectionsSpace: 3,
+                centerSpaceRadius: 40,
               ),
             ),
           ),
@@ -464,20 +536,40 @@ class DashboardProjectTile extends StatelessWidget {
         ? 'Invested ${(project.investedPercentage ?? 0).toStringAsFixed(0)}%'
         : 'Target \$${project.totalPrice.toStringAsFixed(0)}';
 
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  theme.colorScheme.surface.withOpacity(0.6),
+                  theme.colorScheme.surface.withOpacity(0.4),
+                ]
+              : [
+                  Colors.white,
+                  theme.colorScheme.primary.withOpacity(0.03),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.1),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.08),
-            blurRadius: 8,
+            color: theme.colorScheme.primary.withOpacity(isDark ? 0.2 : 0.08),
+            blurRadius: 12,
             offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -517,29 +609,69 @@ class DashboardProjectTile extends StatelessWidget {
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  gradient: LinearGradient(
+                    colors: [
+                      project.status.toLowerCase() == 'active'
+                          ? Colors.green
+                          : Colors.grey,
+                      project.status.toLowerCase() == 'active'
+                          ? Colors.green.shade700
+                          : Colors.grey.shade700,
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (project.status.toLowerCase() == 'active'
+                              ? Colors.green
+                              : Colors.grey)
+                          .withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Text(
-                  project.status,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
+                  project.status.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: (project.progress / 100).clamp(0, 1),
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(6),
-            color: theme.colorScheme.secondary,
-            backgroundColor:
-                theme.colorScheme.secondary.withOpacity(0.1),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: (project.progress / 100).clamp(0, 1),
+                    minHeight: 10,
+                    backgroundColor:
+                        theme.colorScheme.secondary.withOpacity(0.15),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.secondary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '${project.progress.toStringAsFixed(0)}%',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.secondary,
+                ),
+              ),
+            ],
           ),
           if (!showInvested) ...[
             const SizedBox(height: 12),
@@ -573,15 +705,28 @@ class DashboardProjectTile extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton.icon(
+                ElevatedButton.icon(
                   onPressed: () => _navigateToProjectDetails(context),
                   icon: const Icon(Icons.visibility, size: 18),
                   label: const Text('View Details'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                  ),
                 ),
               ],
             ),
           ],
         ],
+      ),
       ),
     );
   }
