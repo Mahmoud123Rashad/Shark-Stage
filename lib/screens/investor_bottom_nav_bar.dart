@@ -4,6 +4,7 @@ import 'investor_dashboard/investor_dashboard.dart';
 import 'profile/profile_screen.dart';
 import 'projects_screen/projects_screen.dart';
 import 'settings_screen/settings_screen.dart';
+import 'blog/blog_screen.dart';
 
 class InvestorBottomNavBar extends StatefulWidget {
   final String email;
@@ -38,6 +39,7 @@ class _InvestorBottomNavBarState extends State<InvestorBottomNavBar> {
       InvestorDashboard(
         userId: widget.userId,
       ),
+      const BlogScreen(),
       ProfileScreen(email: widget.email),
       const SettingsScreen(),
     ];
@@ -65,6 +67,7 @@ class _InvestorBottomNavBarState extends State<InvestorBottomNavBar> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.trending_up), label: "Dashboard"),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: "Blog"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
         ],

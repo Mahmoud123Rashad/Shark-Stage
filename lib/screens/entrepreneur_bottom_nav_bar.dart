@@ -5,6 +5,7 @@ import 'entrepreneur_dashboard/entrepreneur_dashboard.dart';
 import 'profile/profile_screen.dart';
 import 'projects_screen/projects_screen.dart';
 import 'settings_screen/settings_screen.dart';
+import 'blog/blog_screen.dart';
 
 class EntrepreneurBottomNavBar extends StatefulWidget {
   final String email;
@@ -34,6 +35,7 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
     _pages = [
       const ProjectsScreen(),
       const EntrepreneurDashboard(),
+      const BlogScreen(),
       const AddProjectScreen(),
       ProfileScreen(email: '',),
       const SettingsScreen(),
@@ -62,6 +64,7 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: "Blog"),
           BottomNavigationBarItem(
               icon: Icon(Icons.add_circle_outline), label: "Add"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
