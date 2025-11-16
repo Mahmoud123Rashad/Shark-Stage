@@ -168,7 +168,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final result = await EditProfileService.updateProfile(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
-        email: _emailController.text.trim(),
         image: _selectedImage,
         onImageUploadProgress: (progress) {
           if (mounted) {

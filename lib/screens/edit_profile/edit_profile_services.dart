@@ -7,7 +7,6 @@ class EditProfileService {
   static Future<Map<String, dynamic>> updateProfile({
     required String firstName,
     required String lastName,
-    required String email,
     File? image,
     Function(double)? onImageUploadProgress,
   }) async {
@@ -15,7 +14,6 @@ class EditProfileService {
       final body = <String, dynamic>{
         'firstName': firstName,
         'lastName': lastName,
-        'email': email,
       };
 
       final response = await ApiService.patch(
