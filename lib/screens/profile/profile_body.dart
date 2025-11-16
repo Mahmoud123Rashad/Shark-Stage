@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
 import '../edit_profile/edit_profile_screen.dart';
 import 'profile_info_card.dart';
+import '../../widgets/profile/profile_hero_section.dart';
 import 'profile_service.dart';
 import '../../services/auth_storage.dart';
 
@@ -17,8 +17,8 @@ class _ProfileBodyState extends State<ProfileBody> {
   String firstName = '';
   String lastName = '';
   String email = '';
-  String phone = '';
   String? profilePicUrl;
+  String? accountType;
   bool isLoading = true;
 
   @override
@@ -35,8 +35,8 @@ class _ProfileBodyState extends State<ProfileBody> {
         firstName = cached['firstName'] ?? firstName;
         lastName = cached['lastName'] ?? lastName;
         email = cached['email'] ?? widget.email;
-        phone = cached['phone'] ?? phone;
         profilePicUrl = cached['profilePicUrl'];
+        accountType = cached['accountType']?.toString();
         isLoading = false;
       });
     }
@@ -51,8 +51,8 @@ class _ProfileBodyState extends State<ProfileBody> {
         firstName = data['firstName'] ?? '';
         lastName = data['lastName'] ?? '';
         email = data['email'] ?? widget.email;
-        phone = data['phone'] ?? '';
         profilePicUrl = data['profilePicUrl'];
+        accountType = data['accountType']?.toString();
         isLoading = false;
       });
     } else {
@@ -75,7 +75,6 @@ class _ProfileBodyState extends State<ProfileBody> {
           firstName: firstName,
           lastName: lastName,
           email: email,
-          phone: phone,
         ),
       ),
     );
@@ -84,8 +83,9 @@ class _ProfileBodyState extends State<ProfileBody> {
       setState(() {
         firstName = updatedData['firstName'] ?? firstName;
         lastName = updatedData['lastName'] ?? lastName;
-        phone = updatedData['phone'] ?? phone;
       });
+      // Refresh profile to get updated data
+      await _fetchProfile();
     }
   }
 
@@ -100,97 +100,120 @@ class _ProfileBodyState extends State<ProfileBody> {
               color: colorScheme.primary,
             ),
           )
-        : SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-              child: Column(
-                children: [
-                  // 🔹 صورة الملف الشخصي
-                  Center(
-                    child: Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        CircleAvatar(
-                          radius: 65,
-                          backgroundImage: profilePicUrl != null
-                              ? NetworkImage(profilePicUrl!)
-                              : const AssetImage("images/profile.jpeg")
-                                  as ImageProvider,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colorScheme.surface,
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.shadowColor.withOpacity(0.3),
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.camera_alt,
-                              color: colorScheme.primary,
-                            ),
-                            onPressed: _pickAndUploadImage,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // 🔹 بيانات المستخدم
-                  ProfileInfoCard(
-                      label: "First Name",
-                      value: firstName,
-                      valueColor: colorScheme.onSurface),
-                  const SizedBox(height: 16),
-                  ProfileInfoCard(
-                      label: "Last Name",
-                      value: lastName,
-                      valueColor: colorScheme.onSurface),
-                  const SizedBox(height: 16),
-                  ProfileInfoCard(
-                      label: "Email",
-                      value: email,
-                      valueColor: colorScheme.onSurface),
-                  const SizedBox(height: 16),
-                  ProfileInfoCard(
-                      label: "Phone",
-                      value: phone.isNotEmpty ? phone : "Not set yet",
-                      valueColor: colorScheme.onSurface),
-
-                  const SizedBox(height: 40),
-
-                  // 🔹 زر تعديل الملف
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: Icon(Icons.edit, color: colorScheme.onPrimary),
-                      label: Text(
-                        "Edit Profile",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onPrimary,
-                        ),
-                      ),
-                      onPressed: _navigateToEditProfile,
-                    ),
-                  ),
-                ],
+        : CustomScrollView(
+            slivers: [
+              // Hero Section
+              SliverToBoxAdapter(
+                child: ProfileHeroSection(
+                  profilePicUrl: profilePicUrl,
+                  firstName: firstName,
+                  lastName: lastName,
+                  email: email,
+                  accountType: accountType,
+                  onEditImage: _pickAndUploadImage,
+                ),
               ),
-            ),
+              // Info Cards Section
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Section Title
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.person_outline,
+                              color: colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Personal Information',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // First Name
+                    ProfileInfoCard(
+                      label: "First Name",
+                      value: firstName.isNotEmpty ? firstName : 'Not set',
+                      icon: Icons.badge_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    // Last Name
+                    ProfileInfoCard(
+                      label: "Last Name",
+                      value: lastName.isNotEmpty ? lastName : 'Not set',
+                      icon: Icons.badge_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    // Email
+                    ProfileInfoCard(
+                      label: "Email",
+                      value: email.isNotEmpty ? email : 'Not set',
+                      icon: Icons.email_outlined,
+                    ),
+                    const SizedBox(height: 32),
+                    // Edit Profile Button
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            colorScheme.primary,
+                            colorScheme.secondary,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withOpacity(0.4),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                            spreadRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: _navigateToEditProfile,
+                        icon: const Icon(Icons.edit, size: 22),
+                        label: const Text(
+                          "Edit Profile",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ]),
+                ),
+              ),
+            ],
           );
   }
 }

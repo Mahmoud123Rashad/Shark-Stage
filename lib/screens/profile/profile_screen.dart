@@ -16,24 +16,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Profile",
-        ),
+        title: const Text("Profile"),
         centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: Colors.white, // يجعل النص والرجوع بلون واضح
-        elevation: 4,
+        elevation: 0,
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.surface.withOpacity(0.95),
-              theme.colorScheme.surface.withOpacity(1),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          color: theme.brightness == Brightness.dark
+              ? null
+              : Colors.grey[50],
+          gradient: theme.brightness == Brightness.dark
+              ? const LinearGradient(
+                  colors: [
+                    Color(0xFF121212),
+                    Color(0xFF1E1E1E),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+              : null,
         ),
         child: ProfileBody(email: widget.email),
       ),

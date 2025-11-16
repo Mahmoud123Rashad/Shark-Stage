@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../theme/app_colors.dart';
 import 'edit_profile_services.dart';
 import 'edit_profile_widgets.dart';
 
@@ -9,7 +8,6 @@ class EditProfileScreen extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String email;
-  final String phone;
   final File? image;
   final String? imageUrl;
 
@@ -18,7 +16,6 @@ class EditProfileScreen extends StatefulWidget {
     required this.firstName,
     required this.lastName,
     required this.email,
-    required this.phone,
     this.image,
     this.imageUrl,
   });
@@ -31,7 +28,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _emailController;
-  late TextEditingController _phoneController;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   File? _selectedImage;
   bool _isLoading = false;
@@ -44,7 +40,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _firstNameController = TextEditingController(text: widget.firstName);
     _lastNameController = TextEditingController(text: widget.lastName);
     _emailController = TextEditingController(text: widget.email);
-    _phoneController = TextEditingController(text: widget.phone);
     _selectedImage = widget.image;
     _currentImageUrl = widget.imageUrl;
   }
@@ -54,29 +49,85 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+    
     final ImageSource? source = await showModalBottomSheet<ImageSource>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take a Photo'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-          ],
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    colorScheme.surface.withOpacity(0.95),
+                    colorScheme.surface.withOpacity(0.9),
+                  ]
+                : [
+                    Colors.white,
+                    colorScheme.primary.withOpacity(0.05),
+                  ],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(
+            color: colorScheme.primary.withOpacity(0.1),
+            width: 1.5,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colorScheme.onSurface.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.photo_library,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                title: const Text('Choose from Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: colorScheme.secondary,
+                  ),
+                ),
+                title: const Text('Take a Photo'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -102,17 +153,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return null;
   }
 
-  String? _validatePhone(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Phone number is required';
-    }
-    // Basic phone validation
-    final phoneRegex = RegExp(r'^[0-9+\-\s()]+$');
-    if (!phoneRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid phone number';
-    }
-    return null;
-  }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) {
@@ -129,7 +169,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
         image: _selectedImage,
         onImageUploadProgress: (progress) {
           if (mounted) {
@@ -154,7 +193,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           'firstName': result['firstName'],
           'lastName': result['lastName'],
           'email': result['email'],
-          'phone': result['phone'],
           'image': _selectedImage,
           'imageUrl': result['profilePicUrl'],
         });
@@ -195,22 +233,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const gradient = LinearGradient(
-      colors: [Color(0xFF0D1117), Color(0xFF161B22)],
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    );
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Edit Profile"),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: Container(
-        decoration: const BoxDecoration(gradient: gradient),
+        decoration: BoxDecoration(
+          color: !isDark ? Colors.grey[50] : null,
+          gradient: isDark
+              ? const LinearGradient(
+                  colors: [
+                    Color(0xFF121212),
+                    Color(0xFF1E1E1E),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+              : null,
+        ),
         child: SafeArea(
           child: Form(
             key: _formKey,
@@ -226,71 +272,89 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     onPick: _pickImage,
                     isUploading: _isUploadingImage,
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 40),
                   CustomTextField(
                     label: "First Name",
                     controller: _firstNameController,
                     icon: Icons.person,
                     validator: (value) => _validateName(value, "First name"),
                   ),
+                  const SizedBox(height: 16),
                   CustomTextField(
                     label: "Last Name",
                     controller: _lastNameController,
                     icon: Icons.person_outline,
                     validator: (value) => _validateName(value, "Last name"),
                   ),
+                  const SizedBox(height: 16),
                   CustomTextField(
                     label: "Email",
                     controller: _emailController,
                     icon: Icons.email,
                     readOnly: true,
                   ),
-                  CustomTextField(
-                    label: "Phone",
-                    controller: _phoneController,
-                    icon: Icons.phone,
-                    keyboardType: TextInputType.phone,
-                    validator: _validatePhone,
-                  ),
-                  const SizedBox(height: 35),
+                  const SizedBox(height: 40),
                   _isLoading
                       ? Column(
                           children: [
-                            const CircularProgressIndicator(),
+                            CircularProgressIndicator(
+                              color: colorScheme.primary,
+                            ),
                             if (_isUploadingImage) ...[
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 16),
                               Text(
                                 "Uploading image...",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurface.withOpacity(0.7),
                                 ),
                               ),
                             ],
                           ],
                         )
-                      : SizedBox(
+                      : Container(
                           width: double.infinity,
-                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                colorScheme.primary,
+                                colorScheme.secondary,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colorScheme.primary.withOpacity(0.4),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
                           child: ElevatedButton.icon(
-                            icon: const Icon(Icons.save, color: Colors.white),
+                            icon: const Icon(Icons.save, size: 22),
                             label: const Text(
                               "Save Changes",
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.button,
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                               ),
                             ),
                             onPressed: _saveProfile,
                           ),
                         ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

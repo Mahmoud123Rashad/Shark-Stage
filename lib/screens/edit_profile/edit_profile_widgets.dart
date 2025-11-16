@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
+import '../../widgets/app_network_image.dart';
 
 class ProfileImagePicker extends StatelessWidget {
   final File? image;
@@ -16,55 +16,157 @@ class ProfileImagePicker extends StatelessWidget {
     this.isUploading = false,
   });
 
+  Widget _buildAvatarPlaceholder(String name, ThemeData theme) {
+    final initials = name.isNotEmpty
+        ? name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join()
+        : '?';
+    return Container(
+      width: 130,
+      height: 130,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.secondary,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          initials.toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 36,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    ImageProvider? backgroundImage;
-    if (image != null) {
-      backgroundImage = FileImage(image!);
-    } else if (imageUrl != null && imageUrl!.isNotEmpty) {
-      backgroundImage = NetworkImage(imageUrl!);
-    } else {
-      backgroundImage = const AssetImage('images/profile.jpeg') as ImageProvider;
-    }
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
-        CircleAvatar(
-          radius: 65,
-          backgroundColor: Colors.white.withOpacity(0.1),
-          backgroundImage: backgroundImage,
-          child: isUploading
-              ? Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.black.withOpacity(0.5),
-                  ),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        Container(
+          width: 130,
+          height: 130,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: colorScheme.primary.withOpacity(0.3),
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withOpacity(0.2),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: isUploading
+                ? Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          colorScheme.surfaceVariant.withOpacity(0.5),
+                          colorScheme.surfaceVariant.withOpacity(0.3),
+                        ],
+                      ),
                     ),
-                  ),
-                )
-              : null,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  )
+                : image != null
+                    ? Image.file(
+                        image!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildAvatarPlaceholder('User', theme),
+                      )
+                    : imageUrl != null && imageUrl!.isNotEmpty
+                        ? AppNetworkImage(
+                            imageUrl: imageUrl!,
+                            width: 130,
+                            height: 130,
+                            fit: BoxFit.cover,
+                            errorWidget: _buildAvatarPlaceholder('User', theme),
+                            placeholder: Container(
+                              width: 130,
+                              height: 130,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    colorScheme.surfaceVariant.withOpacity(0.3),
+                                    colorScheme.surfaceVariant.withOpacity(0.5),
+                                  ],
+                                ),
+                              ),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : _buildAvatarPlaceholder('User', theme),
+          ),
         ),
         Positioned(
           bottom: 0,
-          right: 4,
-          child: InkWell(
+          right: 0,
+          child: GestureDetector(
             onTap: isUploading ? null : onPick,
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isUploading
-                    ? Colors.grey
-                    : AppColors.button,
+                gradient: isUploading
+                    ? null
+                    : LinearGradient(
+                        colors: [
+                          colorScheme.primary,
+                          colorScheme.secondary,
+                        ],
+                      ),
+                color: isUploading ? Colors.grey : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: isUploading
+                        ? Colors.grey.withOpacity(0.3)
+                        : colorScheme.primary.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Icon(
                 Icons.camera_alt,
                 color: Colors.white,
-                size: 20,
+                size: 22,
               ),
             ),
           ),
@@ -94,38 +196,107 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  colorScheme.surface.withOpacity(0.6),
+                  colorScheme.surface.withOpacity(0.4),
+                ]
+              : [
+                  Colors.white,
+                  colorScheme.primary.withOpacity(0.03),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.1),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(isDark ? 0.2 : 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: TextFormField(
         controller: controller,
         readOnly: readOnly,
         keyboardType: keyboardType,
         validator: validator,
-        style: const TextStyle(color: Colors.white),
+        style: theme.textTheme.bodyLarge?.copyWith(
+          color: colorScheme.onSurface,
+          fontSize: 16,
+        ),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white70),
+          prefixIcon: Container(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              color: colorScheme.primary,
+              size: 20,
+            ),
+          ),
           labelText: label,
-          labelStyle: const TextStyle(color: Colors.white70),
+          labelStyle: TextStyle(
+            color: colorScheme.onSurface.withOpacity(0.6),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
           filled: true,
-          fillColor: Colors.white.withOpacity(0.05),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          fillColor: Colors.transparent,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white.withOpacity(0.06)),
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.button, width: 1.6),
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: colorScheme.primary,
+              width: 2,
+            ),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red, width: 1.6),
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: colorScheme.error,
+              width: 2,
+            ),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red, width: 1.6),
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: colorScheme.error,
+              width: 2,
+            ),
           ),
-          errorStyle: const TextStyle(color: Colors.redAccent),
+          errorStyle: TextStyle(
+            color: colorScheme.error,
+            fontSize: 12,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 18,
+          ),
         ),
       ),
     );

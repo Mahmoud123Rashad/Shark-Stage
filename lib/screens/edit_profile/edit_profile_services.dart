@@ -8,7 +8,6 @@ class EditProfileService {
     required String firstName,
     required String lastName,
     required String email,
-    required String phone,
     File? image,
     Function(double)? onImageUploadProgress,
   }) async {
@@ -16,7 +15,6 @@ class EditProfileService {
       final body = <String, dynamic>{
         'firstName': firstName,
         'lastName': lastName,
-        'phone': phone,
         'email': email,
       };
 
