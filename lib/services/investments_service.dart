@@ -12,7 +12,7 @@ class InvestmentsService {
     if (res['status'] == 200 && res['userProjects'] is List) {
       final list = List<Map<String, dynamic>>.from(
         (res['userProjects'] as List)
-            .where((e) => e is Map<String, dynamic>)
+            .whereType<Map<String, dynamic>>()
             .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map)),
       );
       // For investors response is investedProjects; normalize items

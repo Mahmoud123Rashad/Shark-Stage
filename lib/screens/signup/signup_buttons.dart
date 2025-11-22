@@ -4,13 +4,11 @@ import '../../theme/app_colors.dart';
 class SignUpButtons extends StatelessWidget {
   final VoidCallback onEmailSignUp;
   final VoidCallback onGoogleSignUp;
-  final VoidCallback? onLinkedInSignUp;
 
   const SignUpButtons({
     super.key,
     required this.onEmailSignUp,
     required this.onGoogleSignUp,
-    this.onLinkedInSignUp,
   });
 
   @override
@@ -25,15 +23,6 @@ class SignUpButtons extends StatelessWidget {
           logoUrl:
               "https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png",
           onTap: onGoogleSignUp,
-        ),
-        const SizedBox(height: 12),
-        _buildSocialButton(
-          context,
-          text: "Sign up with LinkedIn (Coming Soon)",
-          logoUrl:
-              "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png",
-          onTap: onLinkedInSignUp,
-          enabled: false,
         ),
       ],
     );

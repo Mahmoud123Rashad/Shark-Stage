@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "470415610035",
+    "project_id": "shark-stage-4e60d",
+    "storage_bucket": "shark-stage-4e60d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:470415610035:android:0e792d2ed47d9622a760c6",
+        "android_client_info": {
+          "package_name": "com.example.finial_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "470415610035-cfs53teofut74q419c1p19oisfrve7ur.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9rwq0MlyvuaepNvEuDzjKbGmE5ZvxDp0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "470415610035-cfs53teofut74q419c1p19oisfrve7ur.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "470415610035-5rgmdmf2avuet1k02s3tpq5v7aaoh135.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.finialProject"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

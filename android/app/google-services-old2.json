@@ -12,12 +12,7 @@
           "package_name": "com.example.finial_project"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "931356072102-3e3t8tsus96899hdvci9spoj3ha8kqf8.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
           "current_key": "AIzaSyCR4VifYPBhpqK9hxYG4YT2q97ship21hc"
@@ -25,12 +20,7 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "931356072102-3e3t8tsus96899hdvci9spoj3ha8kqf8.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

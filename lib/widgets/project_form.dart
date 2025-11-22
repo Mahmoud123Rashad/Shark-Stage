@@ -111,7 +111,7 @@ class _ProjectFormState extends State<ProjectForm> {
         ],
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(
           prefixIcon: Container(
             margin: const EdgeInsets.all(12),

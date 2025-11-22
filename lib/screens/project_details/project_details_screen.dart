@@ -1,4 +1,3 @@
-import 'package:finial_project/theme/app_colors.dart';
 import 'package:finial_project/widgets/project_details_body.dart';
 import 'package:flutter/material.dart';
 

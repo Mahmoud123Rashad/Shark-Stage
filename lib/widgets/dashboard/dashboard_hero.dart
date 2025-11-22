@@ -48,7 +48,7 @@ class _DashboardHeroState extends State<DashboardHero> {
     final firstName = _userInfo!['firstName'] ?? '';
     final lastName = _userInfo!['lastName'] ?? '';
     if (firstName.isNotEmpty || lastName.isNotEmpty) {
-      return '${firstName} ${lastName}'.trim();
+      return '$firstName $lastName'.trim();
     }
     return _userInfo!['email']?.split('@').first ?? 'Investor';
   }
