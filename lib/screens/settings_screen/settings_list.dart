@@ -168,7 +168,7 @@ class _SettingsListState extends State<SettingsList> {
           Switch(
             value: themeProvider.isDarkMode,
             onChanged: (_) => themeProvider.toggleTheme(),
-            activeColor: colorScheme.primary,
+            activeThumbColor: colorScheme.primary,
             activeTrackColor: colorScheme.primary.withOpacity(0.5),
           ),
         ],

@@ -30,7 +30,7 @@ class AppNetworkImage extends StatelessWidget {
           Container(
             width: width,
             height: height,
-            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
             child: const Icon(Icons.broken_image),
           ),
       loadingBuilder: (context, child, loadingProgress) {
@@ -39,7 +39,7 @@ class AppNetworkImage extends StatelessWidget {
             Container(
               width: width,
               height: height,
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
             );
       },
     );
