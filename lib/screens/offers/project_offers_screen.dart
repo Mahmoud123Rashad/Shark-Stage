@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:finial_project/screens/offers/project_offers_service.dart';
-import 'package:finial_project/theme/app_colors.dart';
 
 class ProjectOffersScreen extends StatefulWidget {
   final String projectId;

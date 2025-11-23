@@ -91,7 +91,7 @@ class ProfileHeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final fullName = '${firstName} ${lastName}'.trim();
+    final fullName = '$firstName $lastName'.trim();
     final accountTypeLabel = _getAccountTypeLabel(accountType);
     final accountTypeColor = _getAccountTypeColor(accountType);
 

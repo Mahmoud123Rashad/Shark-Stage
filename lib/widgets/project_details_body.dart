@@ -153,11 +153,11 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody> {
               fit: BoxFit.cover,
               placeholder: Container(
                 height: 250,
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
               ),
               errorWidget: Container(
                 height: 250,
-                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
                 child: const Icon(Icons.broken_image),
               ),
             ),

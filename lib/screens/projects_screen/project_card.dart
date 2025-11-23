@@ -70,8 +70,8 @@ class ProjectCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                            theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                            theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                            theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                           ],
                         ),
                       ),
@@ -84,8 +84,8 @@ class ProjectCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                            theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                            theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                            theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                           ],
                         ),
                       ),

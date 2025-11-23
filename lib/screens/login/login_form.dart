@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../services/auth_storage.dart';
 import '../../theme/app_colors.dart';
 import '../signup/signup_screen.dart';
@@ -14,6 +15,12 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
+  static const String _googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue:
+        '931356072102-3e3t8tsus96899hdvci9spoj3ha8kqf8.apps.googleusercontent.com',
+  );
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -42,40 +49,93 @@ class _LoginFormState extends State<LoginForm> {
     setState(() => _isLoading = false);
 
     if (result['success'] == true) {
-      final summary = await AuthStorage.getUserSummary();
-      final role = (summary['role'] ?? result['role']?.toString())
-              ?.toLowerCase() ??
-          '';
-      final email = summary['email'] ?? _emailController.text.trim();
-      final userId = summary['id'];
-
-      if (role == 'owner' || role == 'entrepreneur') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => EntrepreneurBottomNavBar(
-              email: email ?? '',
-              userId: userId,
-              role: role,
-            ),
-          ),
-        );
-      } else if (role == 'investor') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => InvestorBottomNavBar(
-              email: email ?? '',
-              userId: userId,
-              role: role,
-            ),
-          ),
-        );
-      } else {
-        _showSnack("Unknown user role");
-      }
+      await _navigateAfterLogin(result);
     } else {
       _showSnack(result['message'] ?? "Login failed");
+    }
+  }
+
+  Future<void> _navigateAfterLogin(Map<String, dynamic> result) async {
+    final summary = await AuthStorage.getUserSummary();
+    final role =
+        (summary['role'] ?? result['role']?.toString())?.toLowerCase() ?? '';
+    final email = summary['email'] ?? _emailController.text.trim();
+    final userId = summary['id'];
+
+    if (role == 'owner' || role == 'entrepreneur') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => EntrepreneurBottomNavBar(
+            email: email,
+            userId: userId,
+            role: role,
+          ),
+        ),
+      );
+    } else if (role == 'investor') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => InvestorBottomNavBar(
+            email: email,
+            userId: userId,
+            role: role,
+          ),
+        ),
+      );
+    } else {
+      _showSnack("Unknown user role");
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isLoading = true);
+
+    try {
+      final googleSignIn = GoogleSignIn(
+        scopes: const ['email'],
+        serverClientId: _googleServerClientId,
+      );
+
+      await googleSignIn.signOut();
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        return;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+
+      if (idToken == null || idToken.isEmpty) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Unable to retrieve Google account token. Please try again.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final result = await LoginService.loginWithGoogle(idToken: idToken);
+      if (result['success'] == true) {
+        await _navigateAfterLogin(result);
+      } else {
+        _showSnack(result['message'] ?? 'Google login failed');
+      }
+    } catch (e) {
+      _showSnack('Google sign-in error: $e');
+    } finally {
+      setState(() => _isLoading = false);
+      try {
+        final googleSignIn = GoogleSignIn(
+          scopes: const ['email'],
+          serverClientId: _googleServerClientId,
+        );
+        await googleSignIn.signOut();
+      } catch (_) {}
     }
   }
 
@@ -109,6 +169,49 @@ class _LoginFormState extends State<LoginForm> {
           borderSide: BorderSide(color: AppColors.button),
         ),
       ),
+    );
+  }
+
+  Widget _buildGoogleSignInButton() {
+    final content = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.network(
+          "https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png",
+          width: 24,
+          height: 24,
+        ),
+        const SizedBox(width: 12),
+        const Flexible(
+          child: Text(
+            "Login with Google",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    final button = Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white24,
+        ),
+      ),
+      child: Center(child: content),
+    );
+
+    return InkWell(
+      onTap: _loginWithGoogle,
+      borderRadius: BorderRadius.circular(12),
+      child: button,
     );
   }
 
@@ -163,25 +266,31 @@ class _LoginFormState extends State<LoginForm> {
           const SizedBox(height: 22),
           _isLoading
               ? const CircularProgressIndicator()
-              : SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.button,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              : Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.button,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _login,
+                        child: const Text(
+                          "Login",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                    onPressed: _login,
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                    const SizedBox(height: 12),
+                    _buildGoogleSignInButton(),
+                  ],
                 ),
           const SizedBox(height: 18),
           TextButton(
