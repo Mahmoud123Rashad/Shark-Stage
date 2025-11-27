@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
  final String firstName;
@@ -33,9 +34,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
  
  File? _selectedImage;
  bool _isLoading = false;
-
- // ⚠️ يجب استبدال هذا برابط API Service مركزي في مشروعك
- final String baseUrl ="https://sharkserver-production.up.railway.app";
 
  @override
  void initState() {
@@ -78,7 +76,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return; 
    }
 
-   final uri = Uri.parse("$baseUrl/auth/update");
+   final uri = Uri.parse("${ApiService.baseUrl}/auth/update");
    var request = http.MultipartRequest('PUT', uri);
 
    // 1. إضافة حقول النص

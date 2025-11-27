@@ -9,7 +9,7 @@ import 'screens/splash_screen.dart';
 
 // const _defaultApiBase = 'http://192.168.1.3:5000';
 // const _defaultApiBase = 'https://sharkserver-production.up.railway.app';
-const _defaultApiBase = 'https://sharkstage-server.onrender.com';
+const _defaultApiBase = 'https://sharkstage-server.onrender.com/';
 final GlobalKey<NavigatorState> _appNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {

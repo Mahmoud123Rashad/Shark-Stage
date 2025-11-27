@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../services/api_service.dart';
 
 class EntrepreneurDashboard extends StatefulWidget {
   final String email;
@@ -19,8 +20,6 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
   bool _isNotifLoading = true;
   List<dynamic> _notifications = [];
 
-  final String baseUrl = "https://sharkserver-production.up.railway.app";
-
   @override
   void initState() {
     super.initState();
@@ -30,7 +29,7 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
 
   Future<void> _fetchUserDashboard() async {
     try {
-      final uri = Uri.parse("$baseUrl/auth/getUserByEmail?email=${widget.email}");
+      final uri = Uri.parse("${ApiService.baseUrl}/auth/getUserByEmail?email=${widget.email}");
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
@@ -52,7 +51,7 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
   Future<void> _fetchNotifications() async {
     setState(() => _isNotifLoading = true);
     try {
-      final uri = Uri.parse("$baseUrl/notifications/user"); // endpoint خاص بالمستخدم
+      final uri = Uri.parse("${ApiService.baseUrl}/notifications/user"); // endpoint خاص بالمستخدم
       final response = await http.get(uri, headers: {
         "Content-Type": "application/json",
         // لو عندك توكن:
@@ -74,7 +73,7 @@ class _EntrepreneurDashboardState extends State<EntrepreneurDashboard> {
 
   Future<void> _markAsRead(String id) async {
     try {
-      final uri = Uri.parse("$baseUrl/notifications/$id/read");
+      final uri = Uri.parse("${ApiService.baseUrl}/notifications/$id/read");
       final response = await http.put(uri, headers: {
         "Content-Type": "application/json",
       });

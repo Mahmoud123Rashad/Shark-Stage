@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
+import '../services/api_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -17,9 +18,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
-
-  // رابط السيرفر
-  final String baseUrl = "https://sharkserver-production.up.railway.app";
 
   void _showSnack(String message, {Color? color}) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -60,7 +58,7 @@ Future<void> _changePassword() async {
       return;
     }
 
-    final uri = Uri.parse("$baseUrl/auth/change-password");
+    final uri = Uri.parse("${ApiService.baseUrl}/auth/change-password");
     final response = await http.post(
       uri,
       headers: {
