@@ -63,7 +63,7 @@ class StatsSection extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.3,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -144,7 +144,7 @@ class _StatCard extends StatelessWidget {
             Text(
               stat.value,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.onSurface,
               ),
