@@ -47,3 +47,5 @@ app.*.map.json
 # Google Services (contains sensitive API keys)
 **/google-services.json
 **/google-services-old*.json
+
+sharkstage-team.keystore
