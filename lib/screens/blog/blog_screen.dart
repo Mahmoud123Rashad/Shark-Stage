@@ -202,6 +202,14 @@ class _BlogScreenState extends State<BlogScreen> {
                         ],
                       ),
                     ),
+      floatingActionButton: _isLoggedIn
+          ? FloatingActionButton.extended(
+              onPressed: _showAddPostDialog,
+              icon: const Icon(Icons.add),
+              label: const Text('New Post'),
+              tooltip: 'Add a new post',
+            )
+          : null,
     );
   }
 }

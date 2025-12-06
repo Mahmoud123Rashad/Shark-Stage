@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../services/blog_service.dart';
 
 class AddPostDialog extends StatefulWidget {
@@ -12,6 +14,8 @@ class _AddPostDialogState extends State<AddPostDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
+  final _imagePicker = ImagePicker();
+  File? _selectedImage;
   bool _isSubmitting = false;
 
   @override
@@ -19,6 +23,52 @@ class _AddPostDialogState extends State<AddPostDialog> {
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        final file = File(pickedFile.path);
+        
+        // التحقق من حجم الصورة (أقل من 5MB)
+        final fileSize = await file.length();
+        if (fileSize > 5 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Image size should be less than 5MB'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        setState(() {
+          _selectedImage = file;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      _selectedImage = null;
+    });
   }
 
   Future<void> _submit() async {
@@ -30,6 +80,7 @@ class _AddPostDialogState extends State<AddPostDialog> {
       final result = await BlogService.addPost(
         title: _titleController.text.trim(),
         content: _contentController.text.trim(),
+        image: _selectedImage,
       );
 
       if (result != null && mounted) {
@@ -135,6 +186,83 @@ class _AddPostDialogState extends State<AddPostDialog> {
               },
               textCapitalization: TextCapitalization.sentences,
             ),
+            const SizedBox(height: 16),
+            // Image Upload Section
+            Text(
+              'Image (Optional)',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _selectedImage != null
+                ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          _selectedImage!,
+                          width: double.infinity,
+                          height: 200,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Material(
+                          color: Colors.red,
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: _removeImage,
+                            tooltip: 'Remove image',
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : InkWell(
+                    onTap: _pickImage,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withOpacity(0.5),
+                          style: BorderStyle.solid,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        color: theme.colorScheme.surface,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.image_outlined,
+                            size: 48,
+                            color: theme.colorScheme.outline,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tap to add image',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'PNG, JPG up to 5MB',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.outline.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _isSubmitting ? null : _submit,

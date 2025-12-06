@@ -174,6 +174,29 @@ class BlogPostCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
+                // Post Image
+                if (post['imageUrl'] != null && post['imageUrl'].toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AppNetworkImage(
+                        imageUrl: post['imageUrl'].toString(),
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorWidget: Container(
+                          height: 200,
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 // Content Preview
                 Text(
                   _truncateText(content, 180),

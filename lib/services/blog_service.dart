@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'api_service.dart';
 
 class BlogService {
@@ -56,16 +57,35 @@ class BlogService {
   static Future<Map<String, dynamic>?> addPost({
     required String title,
     required String content,
+    File? image,
   }) async {
     try {
-      final response = await ApiService.post(
-        'blog/post/add',
-        body: {
-          'title': title,
-          'content': content,
-        },
-        auth: true,
-      );
+      Map<String, dynamic>? response;
+      
+      // إذا كانت هناك صورة، استخدم postMultipart
+      if (image != null) {
+        response = await ApiService.postMultipart(
+          'blog/post/add',
+          fields: {
+            'title': title,
+            'content': content,
+          },
+          files: {
+            'image': image,
+          },
+          auth: true,
+        );
+      } else {
+        // إذا لم تكن هناك صورة، استخدم post العادي
+        response = await ApiService.post(
+          'blog/post/add',
+          body: {
+            'title': title,
+            'content': content,
+          },
+          auth: true,
+        );
+      }
       
       if (response['status'] == 201 && response['success'] == true) {
         return response['newPost'] as Map<String, dynamic>?;
