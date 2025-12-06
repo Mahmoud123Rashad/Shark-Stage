@@ -4,8 +4,14 @@ import '../controllers/project_controlller.dart';
 class ProjectForm extends StatefulWidget {
   final String? ownerId;
   final String? projectId;
+  final Function(ProjectController)? onFormSubmit;
 
-  const ProjectForm({super.key, this.ownerId, this.projectId});
+  const ProjectForm({
+    super.key,
+    this.ownerId,
+    this.projectId,
+    this.onFormSubmit,
+  });
 
   @override
   State<ProjectForm> createState() => _ProjectFormState();
@@ -307,7 +313,13 @@ class _ProjectFormState extends State<ProjectForm> {
                   ? null
                   : () async {
                       setState(() {});
-                      await _controller.saveProject(context);
+                      // If onFormSubmit callback is provided, use it (for new projects with payment)
+                      if (widget.onFormSubmit != null && !_controller.isEditMode) {
+                        widget.onFormSubmit!(_controller);
+                      } else {
+                        // Otherwise, use the default save behavior
+                        await _controller.saveProject(context);
+                      }
                       setState(() {});
                     },
               style: ElevatedButton.styleFrom(
