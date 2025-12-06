@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../services/api_service.dart';
 import '../services/auth_storage.dart';
+import '../screens/project_payment_screen.dart';
 
 class ProjectController {
   ProjectController({this.ownerId, this.projectId, this.initialData});
@@ -32,10 +33,12 @@ class ProjectController {
 
   static const List<String> _statusOptions = ['active', 'closed'];
 
-  final ValueNotifier<String> category =
-      ValueNotifier<String>(_categoryOptions.first);
-  final ValueNotifier<String> status =
-      ValueNotifier<String>(_statusOptions.first);
+  final ValueNotifier<String> category = ValueNotifier<String>(
+    _categoryOptions.first,
+  );
+  final ValueNotifier<String> status = ValueNotifier<String>(
+    _statusOptions.first,
+  );
 
   final ImagePicker _picker = ImagePicker();
   final String? ownerId;
@@ -60,9 +63,9 @@ class ProjectController {
     if (picked != null) {
       projectImage = File(picked.path);
       onUpdate();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image selected')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Image selected')));
     }
   }
 
@@ -96,10 +99,7 @@ class ProjectController {
                       colorScheme.surface.withOpacity(0.6),
                       colorScheme.surface.withOpacity(0.4),
                     ]
-                  : [
-                      Colors.white,
-                      colorScheme.primary.withOpacity(0.03),
-                    ],
+                  : [Colors.white, colorScheme.primary.withOpacity(0.03)],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
@@ -119,7 +119,8 @@ class ProjectController {
             controller: controller,
             keyboardType: type,
             maxLines: maxLines,
-            validator: validator ??
+            validator:
+                validator ??
                 (value) => (value == null || value.isEmpty) ? "Required" : null,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: colorScheme.onSurface,
@@ -163,29 +164,17 @@ class ProjectController {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: colorScheme.primary,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: colorScheme.error,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: colorScheme.error, width: 2),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: colorScheme.error,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: colorScheme.error, width: 2),
               ),
-              errorStyle: TextStyle(
-                color: colorScheme.error,
-                fontSize: 12,
-              ),
+              errorStyle: TextStyle(color: colorScheme.error, fontSize: 12),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 18,
@@ -235,10 +224,7 @@ class ProjectController {
                       colorScheme.surface.withOpacity(0.6),
                       colorScheme.surface.withOpacity(0.4),
                     ]
-                  : [
-                      Colors.white,
-                      colorScheme.primary.withOpacity(0.03),
-                    ],
+                  : [Colors.white, colorScheme.primary.withOpacity(0.03)],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
@@ -270,15 +256,15 @@ class ProjectController {
                         height: double.infinity,
                       )
                     : existingImageUrl != null && existingImageUrl!.isNotEmpty
-                        ? Image.network(
-                            existingImageUrl!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildImagePlaceholder(colorScheme),
-                          )
-                        : _buildImagePlaceholder(colorScheme),
+                    ? Image.network(
+                        existingImageUrl!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildImagePlaceholder(colorScheme),
+                      )
+                    : _buildImagePlaceholder(colorScheme),
               ),
             ),
           ),
@@ -328,17 +314,20 @@ class ProjectController {
       isLoading = true;
       final response = await ApiService.get('projects/$projectId', auth: true);
       final statusCode = response['status'] as int? ?? 500;
-      
+
       if (statusCode == 200 && response['success'] == true) {
         final project = response['project'] as Map<String, dynamic>?;
         if (project != null) {
           titleController.text = project['title']?.toString() ?? '';
           shortDescController.text = project['shortDesc']?.toString() ?? '';
           detailsController.text = project['description']?.toString() ?? '';
-          priceController.text = (project['totalPrice'] as num?)?.toString() ?? '';
-          percentageController.text = (project['availablePercentage'] as num?)?.toString() ?? '';
-          roiController.text = (project['expectedROI'] as num?)?.toString() ?? '';
-          
+          priceController.text =
+              (project['totalPrice'] as num?)?.toString() ?? '';
+          percentageController.text =
+              (project['availablePercentage'] as num?)?.toString() ?? '';
+          roiController.text =
+              (project['expectedROI'] as num?)?.toString() ?? '';
+
           final categoryData = project['category'];
           if (categoryData is Map && categoryData['en'] != null) {
             final catValue = categoryData['en'].toString();
@@ -346,12 +335,12 @@ class ProjectController {
               category.value = catValue;
             }
           }
-          
+
           final statusValue = project['status']?.toString() ?? 'active';
           if (_statusOptions.contains(statusValue)) {
             status.value = statusValue;
           }
-          
+
           existingImageUrl = project['image']?.toString();
         }
       }
@@ -366,31 +355,49 @@ class ProjectController {
     if (isEditMode) {
       await updateProject(context);
     } else {
-      await _addProject(context);
+      // Navigate to payment screen for new projects
+      final projectData = {
+        'name': titleController.text.trim(),
+        'amount': double.tryParse(priceController.text.trim()) ?? 0.0,
+        'percentage': double.tryParse(percentageController.text.trim()) ?? 0,
+      };
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) =>
+              ProjectPaymentScreen(projectData: projectData, controller: this),
+        ),
+      );
     }
   }
 
-  Future<void> _addProject(BuildContext context) async {
-    if (!formKey.currentState!.validate()) return;
+  // Public method to add project (used after payment)
+  Future<bool> addProject(BuildContext context) async {
+    return await _addProject(context);
+  }
+
+  Future<bool> _addProject(BuildContext context) async {
+    if (!formKey.currentState!.validate()) return false;
 
     final resolvedOwnerId = await _resolveOwnerId();
     if (resolvedOwnerId == null || resolvedOwnerId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Unable to determine owner account.")),
       );
-      return;
+      return false;
     }
 
     final parsedPrice = double.tryParse(priceController.text.trim());
-    final totalPrice =
-        parsedPrice != null && parsedPrice >= 0 ? parsedPrice : 0.0;
+    final totalPrice = parsedPrice != null && parsedPrice >= 0
+        ? parsedPrice
+        : 0.0;
 
     final parsedRoi = double.tryParse(roiController.text.trim());
     if (parsedRoi == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Expected ROI must be a number.")),
       );
-      return;
+      return false;
     }
 
     final fields = <String, String>{
@@ -407,13 +414,15 @@ class ProjectController {
     final availablePercentageText = percentageController.text.trim();
     if (availablePercentageText.isNotEmpty) {
       final parsedPercentage = double.tryParse(availablePercentageText);
-      if (parsedPercentage == null || parsedPercentage < 0 || parsedPercentage > 100) {
+      if (parsedPercentage == null ||
+          parsedPercentage < 0 ||
+          parsedPercentage > 100) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Available percentage must be between 0 and 100."),
           ),
         );
-        return;
+        return false;
       }
       fields["availablePercentage"] = parsedPercentage.toString();
     }
@@ -446,13 +455,16 @@ class ProjectController {
         category.value = _categoryOptions.first;
         status.value = _statusOptions.first;
         projectImage = null;
+        return true;
       } else {
-        final message = response['message'] ??
+        final message =
+            response['message'] ??
             response['error'] ??
             'Failed to add project (status $statusCode)';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message.toString())));
+        return false;
       }
     } on TimeoutException {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -460,13 +472,15 @@ class ProjectController {
           content: Text("Error: Connection timeout. Check server status."),
         ),
       );
+      return false;
     } catch (e) {
       final errorMsg = e is IOException
           ? "Network Error: Cannot connect to server."
           : e.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $errorMsg")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $errorMsg")));
+      return false;
     } finally {
       isLoading = false;
     }
@@ -475,15 +489,16 @@ class ProjectController {
   Future<void> updateProject(BuildContext context) async {
     if (!formKey.currentState!.validate()) return;
     if (projectId == null || projectId!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Project ID is missing.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Project ID is missing.")));
       return;
     }
 
     final parsedPrice = double.tryParse(priceController.text.trim());
-    final totalPrice =
-        parsedPrice != null && parsedPrice >= 0 ? parsedPrice : 0.0;
+    final totalPrice = parsedPrice != null && parsedPrice >= 0
+        ? parsedPrice
+        : 0.0;
 
     final parsedRoi = double.tryParse(roiController.text.trim());
     if (parsedRoi == null) {
@@ -506,7 +521,9 @@ class ProjectController {
     final availablePercentageText = percentageController.text.trim();
     if (availablePercentageText.isNotEmpty) {
       final parsedPercentage = double.tryParse(availablePercentageText);
-      if (parsedPercentage == null || parsedPercentage < 0 || parsedPercentage > 100) {
+      if (parsedPercentage == null ||
+          parsedPercentage < 0 ||
+          parsedPercentage > 100) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Available percentage must be between 0 and 100."),
@@ -537,12 +554,13 @@ class ProjectController {
         );
         Navigator.of(context).pop(true); // Return true to indicate success
       } else {
-        final message = response['message'] ??
+        final message =
+            response['message'] ??
             response['error'] ??
             'Failed to update project (status $statusCode)';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message.toString())));
       }
     } on TimeoutException {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -554,9 +572,9 @@ class ProjectController {
       final errorMsg = e is IOException
           ? "Network Error: Cannot connect to server."
           : e.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $errorMsg")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $errorMsg")));
     } finally {
       isLoading = false;
     }
@@ -564,9 +582,9 @@ class ProjectController {
 
   Future<bool> deleteProject(BuildContext context) async {
     if (projectId == null || projectId!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Project ID is missing.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Project ID is missing.")));
       return false;
     }
 
@@ -576,7 +594,7 @@ class ProjectController {
         'projects/delete/$projectId',
         auth: true,
       );
-      
+
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Project deleted successfully")),
@@ -599,9 +617,9 @@ class ProjectController {
       final errorMsg = e is IOException
           ? "Network Error: Cannot connect to server."
           : e.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $errorMsg")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $errorMsg")));
       return false;
     } finally {
       isLoading = false;

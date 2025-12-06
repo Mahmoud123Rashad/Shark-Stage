@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../controllers/project_controlller.dart';
+import '../controllers/project_controller.dart';
 
 class ProjectForm extends StatefulWidget {
   final String? ownerId;
@@ -50,11 +50,7 @@ class _ProjectFormState extends State<ProjectForm> {
               color: colorScheme.primary.withOpacity(0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: colorScheme.primary,
-              size: 20,
-            ),
+            child: Icon(icon, color: colorScheme.primary, size: 20),
           ),
           const SizedBox(width: 12),
           Text(
@@ -91,10 +87,7 @@ class _ProjectFormState extends State<ProjectForm> {
                   colorScheme.surface.withOpacity(0.6),
                   colorScheme.surface.withOpacity(0.4),
                 ]
-              : [
-                  Colors.white,
-                  colorScheme.primary.withOpacity(0.03),
-                ],
+              : [Colors.white, colorScheme.primary.withOpacity(0.03)],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
@@ -120,11 +113,7 @@ class _ProjectFormState extends State<ProjectForm> {
               color: colorScheme.primary.withOpacity(0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: colorScheme.primary,
-              size: 20,
-            ),
+            child: Icon(icon, color: colorScheme.primary, size: 20),
           ),
           labelText: label,
           labelStyle: TextStyle(
@@ -144,10 +133,7 @@ class _ProjectFormState extends State<ProjectForm> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(
-              color: colorScheme.primary,
-              width: 2,
-            ),
+            borderSide: BorderSide(color: colorScheme.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
@@ -251,7 +237,11 @@ class _ProjectFormState extends State<ProjectForm> {
           ),
 
           // Financial Info Section
-          _buildSectionTitle('Financial Information', Icons.attach_money, theme),
+          _buildSectionTitle(
+            'Financial Information',
+            Icons.attach_money,
+            theme,
+          ),
           _controller.buildTextField(
             "Price",
             _controller.priceController,
@@ -287,10 +277,7 @@ class _ProjectFormState extends State<ProjectForm> {
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.secondary,
-                ],
+                colors: [colorScheme.primary, colorScheme.secondary],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
@@ -335,9 +322,7 @@ class _ProjectFormState extends State<ProjectForm> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          _controller.isEditMode
-                              ? Icons.update
-                              : Icons.save,
+                          _controller.isEditMode ? Icons.update : Icons.save,
                           size: 22,
                         ),
                         const SizedBox(width: 12),

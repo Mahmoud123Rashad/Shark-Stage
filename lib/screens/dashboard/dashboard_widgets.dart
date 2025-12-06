@@ -1,5 +1,5 @@
 import 'package:finial_project/controllers/dashboard_controller.dart';
-import 'package:finial_project/controllers/project_controlller.dart';
+import 'package:finial_project/controllers/project_controller.dart';
 import 'package:finial_project/screens/edit_project/edit_project_screen.dart';
 import 'package:finial_project/screens/offers/project_offers_screen.dart';
 import 'package:finial_project/screens/project_details/project_details_screen.dart';
@@ -24,10 +24,7 @@ class DashboardStatDefinition {
 }
 
 class DashboardStatGrid extends StatelessWidget {
-  const DashboardStatGrid({
-    super.key,
-    required this.items,
-  });
+  const DashboardStatGrid({super.key, required this.items});
 
   final List<DashboardStatDefinition> items;
 
@@ -50,7 +47,9 @@ class DashboardStatGrid extends StatelessWidget {
               for (var i = 0; i < items.length; i++)
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(right: i == items.length - 1 ? 0 : 12),
+                    padding: EdgeInsets.only(
+                      right: i == items.length - 1 ? 0 : 12,
+                    ),
                     child: _DashboardStatCard(item: items[i]),
                   ),
                 ),
@@ -61,7 +60,9 @@ class DashboardStatGrid extends StatelessWidget {
           children: [
             for (var i = 0; i < items.length; i++)
               Padding(
-                padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 12),
+                padding: EdgeInsets.only(
+                  bottom: i == items.length - 1 ? 0 : 12,
+                ),
                 child: _DashboardStatCard(item: items[i]),
               ),
           ],
@@ -88,20 +89,11 @@ class _DashboardStatCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? [
-                  item.color.withOpacity(0.15),
-                  item.color.withOpacity(0.08),
-                ]
-              : [
-                  Colors.white,
-                  item.color.withOpacity(0.05),
-                ],
+              ? [item.color.withOpacity(0.15), item.color.withOpacity(0.08)]
+              : [Colors.white, item.color.withOpacity(0.05)],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: item.color.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: item.color.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: item.color.withOpacity(isDark ? 0.3 : 0.15),
@@ -135,11 +127,7 @@ class _DashboardStatCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(
-                  item.icon,
-                  color: item.color,
-                  size: 28,
-                ),
+                child: Icon(item.icon, color: item.color, size: 28),
               ),
               Text(
                 item.value,
@@ -200,7 +188,10 @@ class DashboardTrendCard extends StatelessWidget {
       );
     }
 
-    final maxY = points.fold<double>(0, (max, p) => p.amount > max ? p.amount : max);
+    final maxY = points.fold<double>(
+      0,
+      (max, p) => p.amount > max ? p.amount : max,
+    );
     final spots = points
         .asMap()
         .entries
@@ -225,7 +216,9 @@ class DashboardTrendCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -269,8 +262,12 @@ class DashboardTrendCard extends StatelessWidget {
                       },
                     ),
                   ),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 gridData: FlGridData(
@@ -288,11 +285,11 @@ class DashboardTrendCard extends StatelessWidget {
                       show: true,
                       getDotPainter: (spot, percent, barData, index) =>
                           FlDotCirclePainter(
-                        radius: 5,
-                        color: theme.colorScheme.primary,
-                        strokeWidth: 3,
-                        strokeColor: Colors.white,
-                      ),
+                            radius: 5,
+                            color: theme.colorScheme.primary,
+                            strokeWidth: 3,
+                            strokeColor: Colors.white,
+                          ),
                     ),
                     belowBarData: BarAreaData(
                       show: true,
@@ -362,7 +359,9 @@ class DashboardAllocationCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -465,16 +464,10 @@ class _LegendChip extends StatelessWidget {
           Container(
             width: 10,
             height: 10,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall,
-          ),
+          Text(label, style: theme.textTheme.bodySmall),
         ],
       ),
     );
@@ -507,11 +500,13 @@ class DashboardProjectList extends StatelessWidget {
 
     return Column(
       children: projects
-          .map((project) => DashboardProjectTile(
-                project: project,
-                showInvested: showInvested,
-                onRefresh: onRefresh,
-              ))
+          .map(
+            (project) => DashboardProjectTile(
+              project: project,
+              showInvested: showInvested,
+              onRefresh: onRefresh,
+            ),
+          )
           .toList(),
     );
   }
@@ -549,10 +544,7 @@ class DashboardProjectTile extends StatelessWidget {
                   theme.colorScheme.surface.withOpacity(0.6),
                   theme.colorScheme.surface.withOpacity(0.4),
                 ]
-              : [
-                  Colors.white,
-                  theme.colorScheme.primary.withOpacity(0.03),
-                ],
+              : [Colors.white, theme.colorScheme.primary.withOpacity(0.03)],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
@@ -570,163 +562,169 @@ class DashboardProjectTile extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.textTheme.bodySmall?.color?.withOpacity(0.7),
-                      ),
-                    ),
-                    if (showInvested && project.investedPercentage != null) ...[
-                      const SizedBox(height: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        'Amount: \$${project.investedAmount.toStringAsFixed(2)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.secondary,
-                          fontWeight: FontWeight.w500,
+                        project.title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      project.status.toLowerCase() == 'active'
-                          ? Colors.green
-                          : Colors.grey,
-                      project.status.toLowerCase() == 'active'
-                          ? Colors.green.shade700
-                          : Colors.grey.shade700,
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.textTheme.bodySmall?.color?.withOpacity(
+                            0.7,
+                          ),
+                        ),
+                      ),
+                      if (showInvested &&
+                          project.investedPercentage != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Amount: \$${project.investedAmount.toStringAsFixed(2)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.secondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (project.status.toLowerCase() == 'active'
-                              ? Colors.green
-                              : Colors.grey)
-                          .withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
-                child: Text(
-                  project.status.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        project.status.toLowerCase() == 'active'
+                            ? Colors.green
+                            : Colors.grey,
+                        project.status.toLowerCase() == 'active'
+                            ? Colors.green.shade700
+                            : Colors.grey.shade700,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            (project.status.toLowerCase() == 'active'
+                                    ? Colors.green
+                                    : Colors.grey)
+                                .withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    project.status.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: (project.progress / 100).clamp(0, 1),
+                      minHeight: 10,
+                      backgroundColor: theme.colorScheme.secondary.withOpacity(
+                        0.15,
+                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.secondary,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '${project.progress.toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: (project.progress / 100).clamp(0, 1),
-                    minHeight: 10,
-                    backgroundColor:
-                        theme.colorScheme.secondary.withOpacity(0.15),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      theme.colorScheme.secondary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '${project.progress.toStringAsFixed(0)}%',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.secondary,
-                ),
-              ),
-            ],
-          ),
-          if (!showInvested) ...[
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: () => _navigateToOffers(context),
-                  icon: const Icon(Icons.local_offer, size: 18),
-                  label: const Text('Offers'),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () => _navigateToEdit(context),
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: const Text('Edit'),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () => _confirmDelete(context),
-                  icon: const Icon(Icons.delete, size: 18),
-                  label: const Text('Delete'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: theme.colorScheme.error,
+                    color: theme.colorScheme.secondary,
                   ),
                 ),
               ],
             ),
-          ] else ...[
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => _navigateToProjectDetails(context),
-                  icon: const Icon(Icons.visibility, size: 18),
-                  label: const Text('View Details'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 2,
+            if (!showInvested) ...[
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => _navigateToOffers(context),
+                    icon: const Icon(Icons.local_offer, size: 18),
+                    label: const Text('Offers'),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _navigateToEdit(context),
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('Edit'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _confirmDelete(context),
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: const Text('Delete'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: theme.colorScheme.error,
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _navigateToProjectDetails(context),
+                    icon: const Icon(Icons.visibility, size: 18),
+                    label: const Text('View Details'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -763,7 +761,9 @@ class DashboardProjectTile extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Project'),
-        content: Text('Are you sure you want to delete "${project.title}"? This action cannot be undone.'),
+        content: Text(
+          'Are you sure you want to delete "${project.title}"? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -847,9 +847,7 @@ class DashboardEmptyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.1),
-        ),
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -936,5 +934,3 @@ extension DashboardNotifications on List<String> {
   List<NotificationTile> toTiles() =>
       map((message) => NotificationTile(message: message)).toList();
 }
-
-
