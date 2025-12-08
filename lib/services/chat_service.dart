@@ -7,7 +7,10 @@ import 'notification_service.dart';
 class ChatService {
   static IO.Socket? _socket;
   static bool _isConnected = false;
-  static final Map<String, StreamController<Map<String, dynamic>>> _messageStreams = {};
+  static final Map<String, StreamController<Map<String, dynamic>>>
+  _messageStreams = {};
+  static final Set<String> _sentMessageIds =
+      {}; // Track sent message IDs to prevent duplicates
 
   // Initialize Socket.IO connection
   static Future<void> initializeSocket() async {
@@ -56,8 +59,16 @@ class ChatService {
       // Listen for incoming messages
       _socket!.on('receive_message', (data) {
         if (data is Map<String, dynamic>) {
+          final messageId =
+              data['message']?['_id']?.toString() ??
+              data['message']?['id']?.toString();
+          if (messageId != null && _sentMessageIds.contains(messageId)) {
+            _sentMessageIds.remove(messageId);
+            return;
+          }
           final conversationId = data['conversationId']?.toString();
-          if (conversationId != null && _messageStreams.containsKey(conversationId)) {
+          if (conversationId != null &&
+              _messageStreams.containsKey(conversationId)) {
             _messageStreams[conversationId]!.add(data);
           }
         }
@@ -95,7 +106,8 @@ class ChatService {
   // Get message stream for a conversation
   static Stream<Map<String, dynamic>>? getMessageStream(String conversationId) {
     if (!_messageStreams.containsKey(conversationId)) {
-      _messageStreams[conversationId] = StreamController<Map<String, dynamic>>.broadcast();
+      _messageStreams[conversationId] =
+          StreamController<Map<String, dynamic>>.broadcast();
     }
     return _messageStreams[conversationId]!.stream;
   }
@@ -103,10 +115,7 @@ class ChatService {
   // Get all conversations
   static Future<List<dynamic>> getConversations() async {
     try {
-      final response = await ApiService.get(
-        'chat/conversations',
-        auth: true,
-      );
+      final response = await ApiService.get('chat/conversations', auth: true);
 
       if (response['status'] == 201 && response['success'] == true) {
         return response['conversations'] as List<dynamic>? ?? [];
@@ -123,10 +132,7 @@ class ChatService {
   // Get messages for a conversation
   static Future<List<dynamic>> getMessages(String conversationId) async {
     try {
-      final response = await ApiService.get(
-        'chat/$conversationId',
-        auth: true,
-      );
+      final response = await ApiService.get('chat/$conversationId', auth: true);
 
       if (response['status'] == 201 && response['success'] == true) {
         return response['messages'] as List<dynamic>? ?? [];
@@ -141,15 +147,15 @@ class ChatService {
   }
 
   // Send a message
-  static Future<Map<String, dynamic>?> sendMessage(String receiverId, String content) async {
+  static Future<Map<String, dynamic>?> sendMessage(
+    String receiverId,
+    String content,
+  ) async {
     try {
       final response = await ApiService.post(
         'chat/send',
         auth: true,
-        body: {
-          'receiverId': receiverId,
-          'content': content,
-        },
+        body: {'receiverId': receiverId, 'content': content},
       );
 
       if (response['status'] == 201 && response['success'] == true) {
@@ -172,7 +178,8 @@ class ChatService {
     final participants = conversation['participants'] as List<dynamic>? ?? [];
     for (final participant in participants) {
       if (participant is Map<String, dynamic>) {
-        final id = participant['_id']?.toString() ?? participant['id']?.toString();
+        final id =
+            participant['_id']?.toString() ?? participant['id']?.toString();
         if (id != null && id != currentUserId) {
           return participant;
         }
@@ -181,4 +188,3 @@ class ChatService {
     return null;
   }
 }
-
