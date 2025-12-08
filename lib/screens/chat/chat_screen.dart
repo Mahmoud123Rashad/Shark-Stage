@@ -32,6 +32,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _currentUserId;
   StreamSubscription<Map<String, dynamic>>? _messageSubscription;
   late String _conversationId;
+  DateTime _lastSendTime = DateTime.now().subtract(const Duration(seconds: 2));
 
   @override
   void initState() {
@@ -55,6 +56,12 @@ class _ChatScreenState extends State<ChatScreen> {
       if (messageStream != null) {
         _messageSubscription = messageStream.listen((data) {
           if (data['message'] != null) {
+            final senderId =
+                data['message']['sender']?['_id']?.toString() ??
+                data['message']['sender']?['id']?.toString() ??
+                data['message']['senderId']?.toString();
+            if (senderId == _currentUserId)
+              return; // Skip own messages to prevent duplication
             setState(() {
               _messages.add(data['message']);
             });
@@ -68,7 +75,6 @@ class _ChatScreenState extends State<ChatScreen> {
         _isLoading = false;
       });
     }
-
   }
 
   Future<void> _loadMessages() async {
@@ -77,7 +83,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     final messages = await ChatService.getMessages(_conversationId);
-    
+
     setState(() {
       _messages = messages;
       _isLoading = false;
@@ -103,6 +109,11 @@ class _ChatScreenState extends State<ChatScreen> {
     final content = _messageController.text.trim();
     if (content.isEmpty || _isSending) return;
 
+    // Debounce to prevent double sending
+    final now = DateTime.now();
+    if (now.difference(_lastSendTime).inMilliseconds < 500) return;
+    _lastSendTime = now;
+
     String? receiverId;
     if (_conversationId.isEmpty) {
       // Use provided receiverId when no conversation exists yet
@@ -112,9 +123,11 @@ class _ChatScreenState extends State<ChatScreen> {
         final conversations = await ChatService.getConversations();
         Map<String, dynamic>? conversation;
         try {
-          conversation = conversations.firstWhere(
-            (c) => c['_id']?.toString() == _conversationId,
-          ) as Map<String, dynamic>?;
+          conversation =
+              conversations.firstWhere(
+                    (c) => c['_id']?.toString() == _conversationId,
+                  )
+                  as Map<String, dynamic>?;
         } catch (_) {
           conversation = null;
         }
@@ -123,7 +136,9 @@ class _ChatScreenState extends State<ChatScreen> {
             conversation,
             _currentUserId ?? '',
           );
-          receiverId = otherParticipant?['_id']?.toString() ?? otherParticipant?['id']?.toString();
+          receiverId =
+              otherParticipant?['_id']?.toString() ??
+              otherParticipant?['id']?.toString();
         }
       }
       if (receiverId == null || receiverId.isEmpty) {
@@ -137,27 +152,31 @@ class _ChatScreenState extends State<ChatScreen> {
       final conversations = await ChatService.getConversations();
       Map<String, dynamic>? conversation;
       try {
-        conversation = conversations.firstWhere(
-          (c) => c['_id']?.toString() == _conversationId,
-        ) as Map<String, dynamic>?;
+        conversation =
+            conversations.firstWhere(
+                  (c) => c['_id']?.toString() == _conversationId,
+                )
+                as Map<String, dynamic>?;
       } catch (_) {
         conversation = null;
       }
       if (conversation == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Conversation not found')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Conversation not found')));
         return;
       }
       final otherParticipant = ChatService.getOtherParticipant(
         conversation,
         _currentUserId ?? '',
       );
-      receiverId = otherParticipant?['_id']?.toString() ?? otherParticipant?['id']?.toString();
+      receiverId =
+          otherParticipant?['_id']?.toString() ??
+          otherParticipant?['id']?.toString();
       if (receiverId == null || receiverId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid recipient')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invalid recipient')));
         return;
       }
     }
@@ -166,18 +185,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _isSending = true;
     });
 
-    // Optimistically add message to UI
-    final tempMessage = {
-      '_id': 'temp_${DateTime.now().millisecondsSinceEpoch}',
-      'sender': {'_id': _currentUserId},
-      'content': content,
-      'createdAt': DateTime.now().toIso8601String(),
-    };
-    setState(() {
-      _messages.add(tempMessage);
-    });
     _messageController.clear();
-    _scrollToBottom();
 
     // Send message
     final result = await ChatService.sendMessage(receiverId, content);
@@ -187,28 +195,17 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     if (result == null) {
-      // Remove temp message on error
-      setState(() {
-        _messages.removeWhere((m) {
-          final id = m['_id']?.toString() ?? '';
-          return id.startsWith('temp_');
-        });
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send message')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to send message')));
     } else {
-      // Replace temp message with real one
-      if (result['newMessage'] != null) {
+      // Add the sent message to UI
+      final sentMessage = result['newMessage'] ?? result['message'];
+      if (sentMessage != null) {
         setState(() {
-          final tempIndex = _messages.indexWhere((m) {
-            final id = m['_id']?.toString() ?? '';
-            return id.startsWith('temp_');
-          });
-          if (tempIndex != -1) {
-            _messages[tempIndex] = result['newMessage'];
-          }
+          _messages.add(sentMessage);
         });
+        _scrollToBottom();
       }
       // If this was a new conversation, capture its id and start realtime
       if (_conversationId.isEmpty && result['conversationId'] != null) {
@@ -219,6 +216,12 @@ class _ChatScreenState extends State<ChatScreen> {
         if (stream != null) {
           _messageSubscription = stream.listen((data) {
             if (data['message'] != null) {
+              final senderId =
+                  data['message']['sender']?['_id']?.toString() ??
+                  data['message']['sender']?['id']?.toString() ??
+                  data['message']['senderId']?.toString();
+              if (senderId == _currentUserId)
+                return; // Skip own messages to prevent duplication
               setState(() {
                 _messages.add(data['message']);
               });
@@ -231,9 +234,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   bool _isCurrentUserMessage(Map<String, dynamic> message) {
-    final senderId = message['sender']?['_id']?.toString() ?? 
-                    message['sender']?['id']?.toString() ??
-                    message['senderId']?.toString();
+    final senderId =
+        message['sender']?['_id']?.toString() ??
+        message['sender']?['id']?.toString() ??
+        message['senderId']?.toString();
     return senderId == _currentUserId;
   }
 
@@ -256,192 +260,194 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return ProtectedScreen(builder: (context) => Scaffold(
-      appBar: AppBar(
-        title: Row(
+    return ProtectedScreen(
+      builder: (context) => Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              CircleAvatar(
+                backgroundImage:
+                    widget.otherParticipantImage != null &&
+                        widget.otherParticipantImage!.isNotEmpty
+                    ? NetworkImage(widget.otherParticipantImage!)
+                    : null,
+                child:
+                    widget.otherParticipantImage == null ||
+                        widget.otherParticipantImage!.isEmpty
+                    ? Text(
+                        widget.otherParticipantName.isNotEmpty
+                            ? widget.otherParticipantName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.otherParticipantName,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: Column(
           children: [
-            CircleAvatar(
-              backgroundImage: widget.otherParticipantImage != null &&
-                      widget.otherParticipantImage!.isNotEmpty
-                  ? NetworkImage(widget.otherParticipantImage!)
-                  : null,
-              child: widget.otherParticipantImage == null ||
-                      widget.otherParticipantImage!.isEmpty
-                  ? Text(
-                      widget.otherParticipantName.isNotEmpty
-                          ? widget.otherParticipantName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                widget.otherParticipantName,
-                style: const TextStyle(fontSize: 18),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _messages.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 64,
+                            color: theme.colorScheme.primary.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No messages yet',
+                            style: theme.textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Start the conversation',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(8),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        final message = _messages[index];
+                        final isUser = _isCurrentUserMessage(message);
+                        final content = message['content']?.toString() ?? '';
+                        final time = _formatMessageTime(
+                          message['createdAt']?.toString(),
+                        );
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisAlignment: isUser
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
+                            children: [
+                              if (!isUser) ...[const SizedBox(width: 8)],
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isUser
+                                        ? theme.colorScheme.primary
+                                        : theme
+                                              .colorScheme
+                                              .surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        content,
+                                        style: TextStyle(
+                                          color: isUser
+                                              ? Colors.white
+                                              : theme.colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      if (time.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          time,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: isUser
+                                                ? Colors.white70
+                                                : theme.colorScheme.onSurface
+                                                      .withOpacity(0.6),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (isUser) ...[const SizedBox(width: 8)],
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        decoration: InputDecoration(
+                          hintText: 'Type a message...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                        maxLines: null,
+                        textCapitalization: TextCapitalization.sentences,
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _isSending ? null : _sendMessage,
+                      icon: _isSending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(Icons.send, color: theme.colorScheme.primary),
+                      style: IconButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _messages.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.chat_bubble_outline,
-                              size: 64,
-                              color: theme.colorScheme.primary.withOpacity(0.5),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No messages yet',
-                              style: theme.textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Start the conversation',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(8),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) {
-                          final message = _messages[index];
-                          final isUser = _isCurrentUserMessage(message);
-                          final content = message['content']?.toString() ?? '';
-                          final time = _formatMessageTime(
-                            message['createdAt']?.toString(),
-                          );
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              mainAxisAlignment: isUser
-                                  ? MainAxisAlignment.end
-                                  : MainAxisAlignment.start,
-                              children: [
-                                if (!isUser) ...[
-                                  const SizedBox(width: 8),
-                                ],
-                                Flexible(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isUser
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          content,
-                                          style: TextStyle(
-                                            color: isUser
-                                                ? Colors.white
-                                                : theme.colorScheme.onSurface,
-                                          ),
-                                        ),
-                                        if (time.isNotEmpty) ...[
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            time,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: isUser
-                                                  ? Colors.white70
-                                                  : theme.colorScheme.onSurface.withOpacity(0.6),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (isUser) ...[
-                                  const SizedBox(width: 8),
-                                ],
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              boxShadow: [
-                BoxShadow(
-                  color: theme.shadowColor.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                      ),
-                      maxLines: null,
-                      textCapitalization: TextCapitalization.sentences,
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _isSending ? null : _sendMessage,
-                    icon: _isSending
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            Icons.send,
-                            color: theme.colorScheme.primary,
-                          ),
-                    style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    ));
+    );
   }
 }
-
