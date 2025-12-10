@@ -1,3 +1,4 @@
+import 'package:finial_project/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'login_form.dart';
 
@@ -6,11 +7,15 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gradient = const LinearGradient(
-      colors: [Color(0xFF0D1117), Color(0xFF12151A)],
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    );
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final gradient = isDark
+        ? const LinearGradient(
+            colors: [Color(0xFF0D1117), Color(0xFF12151A)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          )
+        : AppColors.mainGradient;
 
     return Scaffold(
       extendBodyBehindAppBar: true,

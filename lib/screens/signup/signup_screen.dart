@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'signup_form.dart';
 
 class SignUpScreen extends StatelessWidget {
@@ -6,11 +7,15 @@ class SignUpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gradient = const LinearGradient(
-      colors: [Color(0xFF0D1117), Color(0xFF12151A)],
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    );
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final gradient = isDark
+        ? const LinearGradient(
+            colors: [Color(0xFF0D1117), Color(0xFF12151A)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          )
+        : AppColors.mainGradient;
 
     return Scaffold(
       appBar: AppBar(

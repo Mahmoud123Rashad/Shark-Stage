@@ -77,7 +77,13 @@ class ProfileService {
       try {
         parsed = jsonDecode(body) as Map<String, dynamic>;
       } catch (_) {
-        parsed = {'message': 'Invalid response format', 'raw': body};
+        debugPrint("❌ Failed to parse JSON response: $body");
+        // If status is 200 and body looks like a URL, assume it's the imageUrl
+        if (response.statusCode == 200 && body.startsWith('http')) {
+          parsed = {'imageUrl': body.trim(), 'raw': body};
+        } else {
+          parsed = {'message': 'Invalid response format from server. Please try again.', 'raw': body};
+        }
       }
       parsed['status'] = response.statusCode;
       if (response.statusCode == 200 && parsed['imageUrl'] != null) {
