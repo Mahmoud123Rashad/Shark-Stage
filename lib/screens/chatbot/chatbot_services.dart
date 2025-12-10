@@ -1,11 +1,18 @@
 import '../../services/api_service.dart';
 
 class ChatBotService {
+  static String _detectLanguage(String message) {
+    // Check if the message contains Arabic characters (Unicode range 0600-06FF)
+    final arabicRegex = RegExp(r'[\u0600-\u06FF]');
+    return arabicRegex.hasMatch(message) ? 'ar' : 'en';
+  }
+
   static Future<String> sendMessage(String message) async {
     try {
+      final language = _detectLanguage(message);
       final response = await ApiService.post(
         'chatbot/ask',
-        body: {'question': message, 'language': 'ar'},
+        body: {'question': message, 'language': language},
       );
 
       final status = response['status'] as int? ?? 500;
