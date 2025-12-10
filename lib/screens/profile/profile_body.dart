@@ -47,6 +47,8 @@ class _ProfileBodyState extends State<ProfileBody> {
     if (!mounted) return;
 
     if (data != null) {
+      debugPrint("Profile data fetched: $data");
+      debugPrint("Profile pic URL: ${data['profilePicUrl']}");
       setState(() {
         firstName = data['firstName'] ?? '';
         lastName = data['lastName'] ?? '';
@@ -56,6 +58,10 @@ class _ProfileBodyState extends State<ProfileBody> {
         isLoading = false;
       });
     } else {
+      debugPrint("Profile data is null");
+      // For testing: set a sample profile picture URL if none exists
+      // Uncomment the line below to test with a sample image
+      profilePicUrl = 'https://via.placeholder.com/120x120?text=Test';
       setState(() => isLoading = false);
     }
   }
@@ -95,11 +101,7 @@ class _ProfileBodyState extends State<ProfileBody> {
     final colorScheme = theme.colorScheme;
 
     return isLoading
-        ? Center(
-            child: CircularProgressIndicator(
-              color: colorScheme.primary,
-            ),
-          )
+        ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
         : CustomScrollView(
             slivers: [
               // Hero Section
@@ -171,10 +173,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            colorScheme.primary,
-                            colorScheme.secondary,
-                          ],
+                          colors: [colorScheme.primary, colorScheme.secondary],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [

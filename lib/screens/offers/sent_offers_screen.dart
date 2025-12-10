@@ -4,7 +4,7 @@ import 'package:finial_project/screens/project_details/project_details_screen.da
 import 'package:finial_project/theme/app_colors.dart';
 
 class SentOffersScreen extends StatefulWidget {
-  const SentOffersScreen({super.key});
+  const SentOffersScreen({super.key, String? initialOfferId});
 
   @override
   State<SentOffersScreen> createState() => _SentOffersScreenState();

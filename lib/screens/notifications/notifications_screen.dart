@@ -3,12 +3,33 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/notification_service.dart';
 import '../../services/chat_service.dart';
-// 💡 حافظنا على هذه الاستيرادات لاستخدامها في شاشة التفاصيل الجديدة
+// 💡 حافظنا على هذه الاستيرادات لاستخدامها في التنقل المباشر
 import '../project_details/project_details_screen.dart';
 import '../chat/chat_screen.dart';
-import '../offers/sent_offers_screen.dart';
-// 🟢 استيراد شاشة تفاصيل الإشعار الجديدة
+import '../offers/project_offers_screen.dart';
+// 🟢 استيراد شاشة تفاصيل الإشعار
 import '../notifications/notification_detail_screen.dart';
+
+// ⚠️ تنبيه هام: هذا مجرد تعريف هيكلي. يجب أن تستبدله بالاستيراد الفعلي
+//     لشاشة SentOffersScreen الخاصة بك، وتأكد من أنها تقبل initialOfferId.
+class SentOffersScreen extends StatelessWidget {
+  final String? initialOfferId;
+  const SentOffersScreen({super.key, this.initialOfferId});
+
+  @override
+  Widget build(BuildContext context) {
+    // 🛑 يجب عليك إضافة المنطق هنا لتحميل وتحديد العرض ذي الـ ID الممرر
+    return Scaffold(
+      appBar: AppBar(title: Text('My Offers')),
+      body: Center(
+        child: Text(
+          'My Offers Screen. Focusing on Offer ID: ${initialOfferId ?? 'None'}',
+        ),
+      ),
+    );
+  }
+}
+// ----------------------------------------------------------------------
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -21,6 +42,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   List<dynamic> _notifications = [];
   bool _isLoading = true;
   StreamSubscription<Map<String, dynamic>>? _notificationSubscription;
+  // 🟢 متغير لحفظ عدد الإشعارات غير المقروءة.
+  int _unreadCount = 0;
 
   @override
   void initState() {
@@ -44,6 +67,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         // Add new notification to the list
         setState(() {
           _notifications.insert(0, notification);
+          // 🟢 زيادة العدد غير المقروء إذا كان الإشعار جديداً وغير مقروء
+          if (notification['isRead'] != true) {
+            _unreadCount++;
+          }
           // Sort again to maintain order
           _notifications.sort((a, b) {
             final aRead = a['isRead'] == true;
@@ -94,46 +121,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() {
       _notifications = notifications;
       _isLoading = false;
+      // 🟢 حساب العدد الإجمالي غير المقروء عند التحميل
+      _unreadCount = notifications.where((n) => n['isRead'] != true).length;
     });
   }
 
+  // 💡 دالة التحديث بعد القراءة:
   Future<void> _markAsRead(String notificationId, int index) async {
     final success = await NotificationService.markAsRead(notificationId);
     if (success && mounted) {
       setState(() {
+        // تأكد من تحديث حالة الإشعار في القائمة
         _notifications[index]['isRead'] = true;
+        // 🟢 تقليل العدد غير المقروء
+        _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
       });
     }
   }
 
-  // 🟢 دالة التعامل مع النقر على الإشعار بعد التعديل
-  Future<void> _handleNotificationTap(Map<String, dynamic> notification) async {
-    final notificationId = notification['_id']?.toString() ?? '';
-
-    // 1. تحديد الإشعار كمقروء في واجهة المستخدم وقاعدة البيانات (إذا لم يكن مقروءاً بالفعل)
-    if (notification['isRead'] != true) {
-      final index = _notifications.indexWhere(
-        (n) => n['_id']?.toString() == notificationId,
-      );
-      if (index != -1) {
-        // نستخدم await لتحديث حالة القائمة قبل الانتقال
-        await _markAsRead(notificationId, index);
-      }
-    }
-
-    // 2. الانتقال إلى شاشة تفاصيل الإشعار لعرض المحتوى الكامل
-    if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => NotificationDetailScreen(
-          notification: notification, // تمرير كائن الإشعار بالكامل
-        ),
-      ),
-    );
-  }
-
-  // دالة التنقل بناءً على الرابط
-  Future<void> _navigateByLink(String link) async {
+  // 🟢 دالة التنقل المباشر (Deep-Linking)
+  Future<void> _navigateByLink(BuildContext context, String link) async {
     final path = link.startsWith('/') ? link : '/$link';
     final segments = path.split('/').where((s) => s.isNotEmpty).toList();
 
@@ -142,33 +149,88 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     if (segments[0] == 'projects' && segments.length >= 2) {
       final id = segments[1];
-      Navigator.of(context).push(
+      await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => ProjectDetailsScreen(projectId: id)),
       );
-    } else if (segments[0] == 'chat' && segments.length >= 2) {
-      Navigator.of(context).push(
+      return;
+    }
+
+    if (segments[0] == 'chat' && segments.length >= 2) {
+      final conversationId = segments[1]; // نستخدم المعرف الموجود في الرابط
+      await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => const ChatScreen(
-            conversationId: '',
+          builder: (_) => ChatScreen(
+            conversationId: conversationId,
             otherParticipantName: 'Conversation',
           ),
         ),
       );
-    } else if (segments[0] == 'account' &&
-        segments.length >= 2 &&
-        segments[1] == 'offers') {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const SentOffersScreen()));
-    } else {
-      // Fallback
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Unknown link: $link')));
+      return;
     }
+
+    // 🟢 منطق التنقل المباشر للعروض (المُعدّل لتمرير الـ ID إلى ProjectOffersScreen)
+    // نتوقع رابط بالشكل: /projects/<projectId>/offers/<offerId> أو /projects/<projectId>/offers
+    if (segments[0] == 'projects' &&
+        segments.length >= 3 &&
+        segments[2] == 'offers') {
+      final projectId = segments[1];
+      final String? offerId = segments.length >= 4 ? segments[3] : null;
+
+      // 🛑 يتم الانتقال إلى ProjectOffersScreen مع تمرير الـ projectId و offerId
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProjectOffersScreen(
+            projectId: projectId,
+            initialOfferId: offerId,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // fallback للتنبيه في حالة رابط غير متوقع
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Unknown link: $link')));
   }
 
-  // 🔴 تم حذف دالة _navigateByLink() حيث سيتم نقل منطقها إلى NotificationDetailScreen.
+  // 🟢 دالة التعامل مع النقر على الإشعار
+  Future<void> _handleNotificationTap(Map<String, dynamic> notification) async {
+    final notificationId = notification['_id']?.toString() ?? '';
+    final link = notification['link']?.toString() ?? '';
+    final type = notification['type']?.toString();
+
+    // 1. تحديد الإشعار كمقروء (إذا لم يكن كذلك)
+    if (notification['isRead'] != true) {
+      final index = _notifications.indexWhere(
+        (n) => n['_id']?.toString() == notificationId,
+      );
+      if (index != -1) {
+        await _markAsRead(
+          notificationId,
+          index,
+        ); // يتم تحديث isRead و _unreadCount هنا
+      }
+    }
+
+    if (!mounted) return;
+
+    // 2. التنقل المباشر لـ "الرسائل" و "العروض" (Deep Link)
+    if (link.isNotEmpty &&
+        (type == 'message' || type?.startsWith('offer') == true)) {
+      await _navigateByLink(context, link); // التنقل المباشر
+    }
+    // 3. التنقل إلى شاشة التفاصيل للأنواع الأخرى
+    else {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => NotificationDetailScreen(
+            notification: notification, // تمرير كائن الإشعار بالكامل
+          ),
+        ),
+      );
+    }
+  }
 
   IconData _getNotificationIcon(String? type) {
     switch (type) {
@@ -231,9 +293,35 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadNotifications,
+          // 🟢 عرض عدد الإشعارات غير المقروءة (Badge)
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _loadNotifications,
+              ),
+              if (_unreadCount > 0)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Text(
+                      _unreadCount.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -290,6 +378,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                     onDismissed: (direction) {
                       if (!isRead) {
+                        // يتم تحديد كمقروء عبر التمرير (Swipe)
                         _markAsRead(
                           notification['_id']?.toString() ?? '',
                           index,
