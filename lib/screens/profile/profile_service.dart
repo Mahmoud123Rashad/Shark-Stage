@@ -13,14 +13,15 @@ class ProfileService {
   /// 🧠 جلب بيانات البروفايل
   static Future<Map<String, dynamic>?> fetchProfile() async {
     try {
-      final response = await ApiService.get(
-        'auth/me',
-        auth: true,
-      );
+      final response = await ApiService.get('auth/me', auth: true);
+      debugPrint("Profile fetch response: $response");
       if ((response['status'] == 200 || response['status'] == 201) &&
           response['user'] is Map<String, dynamic>) {
-        final user =
-            Map<String, dynamic>.from(response['user'] as Map<String, dynamic>);
+        final user = Map<String, dynamic>.from(
+          response['user'] as Map<String, dynamic>,
+        );
+        debugPrint("User data: $user");
+        debugPrint("Profile pic URL from API: ${user['profilePicUrl']}");
         await AuthStorage.saveUser(user);
         return user;
       }
@@ -55,10 +56,7 @@ class ProfileService {
   static Future<Map<String, dynamic>> uploadProfileImage(File image) async {
     final token = await AuthStorage.getToken();
     if (token == null || token.isEmpty) {
-      return {
-        'success': false,
-        'message': 'Not authenticated',
-      };
+      return {'success': false, 'message': 'Not authenticated'};
     }
 
     try {
@@ -81,20 +79,24 @@ class ProfileService {
       }
       parsed['status'] = response.statusCode;
       if (response.statusCode == 200 && parsed['imageUrl'] != null) {
+        // Ensure full URL if relative
+        String imageUrl = parsed['imageUrl'];
+        if (!imageUrl.startsWith('http')) {
+          imageUrl = '${ApiService.baseUrl}/$imageUrl'.replaceAll('//', '/');
+        }
         final user = await AuthStorage.getUser() ?? {};
-        user['profilePicUrl'] = parsed['imageUrl'];
+        user['profilePicUrl'] = imageUrl;
         await AuthStorage.saveUser(user);
+        parsed['imageUrl'] = imageUrl;
         parsed['success'] = true;
       } else {
         parsed['success'] = false;
       }
       return parsed;
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Upload error: $e',
-      };
+      return {'success': false, 'message': 'Upload error: $e'};
     }
   }
 }
+
 // lib/screens/profile/profile_service.dart
