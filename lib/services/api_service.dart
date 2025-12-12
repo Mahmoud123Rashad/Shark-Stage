@@ -171,6 +171,24 @@ class ApiService {
     bool auth = false,
     Map<String, String>? headers,
   }) async {
+    return postMultipartWithMultipleFiles(
+      endpoint,
+      fields: fields,
+      files: files,
+      multipleFilesField: null,
+      auth: auth,
+      headers: headers,
+    );
+  }
+
+  static Future<Map<String, dynamic>> postMultipartWithMultipleFiles(
+    String endpoint, {
+    Map<String, String>? fields,
+    Map<String, File>? files,
+    Map<String, List<File>>? multipleFilesField,
+    bool auth = false,
+    Map<String, String>? headers,
+  }) async {
     final url = _resolve(endpoint);
     print("➡️ POST (multipart) $url");
 
@@ -199,6 +217,23 @@ class ApiService {
             contentType: MediaType.parse(mimeType),
           ),
         );
+      }
+    }
+
+    // Handle multiple files with same field name
+    if (multipleFilesField != null && multipleFilesField.isNotEmpty) {
+      for (final entry in multipleFilesField.entries) {
+        for (final file in entry.value) {
+          if (file.path.isEmpty || !file.existsSync()) continue;
+          final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              entry.key,
+              file.path,
+              contentType: MediaType.parse(mimeType),
+            ),
+          );
+        }
       }
     }
 

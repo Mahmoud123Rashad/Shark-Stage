@@ -1,4 +1,4 @@
-import 'package:finial_project/screens/add-project.dart';
+import 'package:finial_project/screens/add-project-wizard.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'entrepreneur_dashboard/entrepreneur_dashboard.dart';
@@ -36,7 +36,7 @@ class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
       const ProjectsScreen(),
       const EntrepreneurDashboard(),
       const BlogScreen(),
-      const AddProjectScreen(),
+      const AddProjectWizardScreen(), // Using new Wizard screen
       ProfileScreen(email: '',),
       const SettingsScreen(),
     ];
