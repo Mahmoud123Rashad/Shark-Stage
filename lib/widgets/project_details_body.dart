@@ -8,6 +8,7 @@ import '../utils/project_image.dart';
 import '../services/auth_storage.dart';
 import '../services/chat_service.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import 'app_network_image.dart';
 
 class ProjectDetailsBody extends StatefulWidget {
@@ -354,9 +355,18 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
               TabBar(
                 controller: _tabController,
                 isScrollable: true,
-                labelColor: colorScheme.primary,
+                labelColor: AppColors.button,
                 unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
-                indicatorColor: colorScheme.primary,
+                indicatorColor: AppColors.button,
+                indicatorWeight: 3,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 14,
+                ),
                 tabs: const [
                   Tab(text: 'Overview', icon: Icon(Icons.description)),
                   Tab(text: 'Timeline', icon: Icon(Icons.timeline)),
@@ -707,6 +717,9 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
   }
 
   Widget _buildOverviewTab(BuildContext context, ColorScheme colorScheme) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -714,139 +727,286 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
         children: [
           // Progress Indicator
           if (widget.project["progress"] != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Investment Progress',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${widget.project["progress"]}%',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+            Container(
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          colorScheme.surface.withOpacity(0.6),
+                          colorScheme.surface.withOpacity(0.4),
+                        ]
+                      : [
+                          Colors.white,
+                          colorScheme.primary.withOpacity(0.03),
+                        ],
                 ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: (widget.project["progress"] ?? 0) / 100,
-                  backgroundColor: colorScheme.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.primary.withOpacity(0.1),
+                  width: 1.5,
                 ),
-                const SizedBox(height: 24),
-              ],
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(isDark ? 0.2 : 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Investment Progress',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${widget.project["progress"]}%',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.button,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: (widget.project["progress"] ?? 0) / 100,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.button),
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ],
+              ),
             ),
 
           // Description
-          const Text(
-            'Description',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        colorScheme.surface.withOpacity(0.6),
+                        colorScheme.surface.withOpacity(0.4),
+                      ]
+                    : [
+                        Colors.white,
+                        colorScheme.primary.withOpacity(0.03),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(0.1),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withOpacity(isDark ? 0.2 : 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Description',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  widget.project["description"] ?? "No description available",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.6,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            widget.project["description"] ?? "No description available",
-            style: const TextStyle(
-              fontSize: 16,
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 24),
 
           // Key Benefits
           if (widget.project["keyBenefits"] != null &&
               (widget.project["keyBenefits"] as List).isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 24),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Key Benefits',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+            Container(
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          colorScheme.surface.withOpacity(0.6),
+                          colorScheme.surface.withOpacity(0.4),
+                        ]
+                      : [
+                          Colors.white,
+                          Colors.green.withOpacity(0.03),
+                        ],
                 ),
-                const SizedBox(height: 12),
-                ...(widget.project["keyBenefits"] as List)
-                    .map<Widget>((b) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(Icons.check,
-                                  color: Colors.green, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  b.toString(),
-                                  style: const TextStyle(fontSize: 16),
-                                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.green.withOpacity(0.2),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(isDark ? 0.2 : 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 24),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Key Benefits',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...(widget.project["keyBenefits"] as List)
+                      .map<Widget>((b) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            ],
-                          ),
-                        ))
-                    .toList(),
-                const SizedBox(height: 24),
-              ],
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.check,
+                                      color: Colors.green, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      b.toString(),
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                ],
+              ),
             ),
 
           // Potential Risks
           if (widget.project["potentialRisks"] != null &&
               (widget.project["potentialRisks"] as List).isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.warning, color: Colors.orange, size: 24),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Potential Risks',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+            Container(
+              margin: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          colorScheme.surface.withOpacity(0.6),
+                          colorScheme.surface.withOpacity(0.4),
+                        ]
+                      : [
+                          Colors.white,
+                          Colors.orange.withOpacity(0.03),
+                        ],
                 ),
-                const SizedBox(height: 12),
-                ...(widget.project["potentialRisks"] as List)
-                    .map<Widget>((r) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(Icons.warning_amber,
-                                  color: Colors.orange, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  r.toString(),
-                                  style: const TextStyle(fontSize: 16),
-                                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.orange.withOpacity(0.2),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(isDark ? 0.2 : 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.warning, color: Colors.orange, size: 24),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Potential Risks',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...(widget.project["potentialRisks"] as List)
+                      .map<Widget>((r) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            ],
-                          ),
-                        ))
-                    .toList(),
-              ],
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.warning_amber,
+                                      color: Colors.orange, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      r.toString(),
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                ],
+              ),
             ),
 
           // Management Team
@@ -855,7 +1015,6 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 24),
                 const Text(
                   'Management Team',
                   style: TextStyle(
@@ -865,38 +1024,87 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
                 ),
                 const SizedBox(height: 12),
                 ...(widget.project["managementTeam"] as List)
-                    .map<Widget>((member) => Card(
+                    .map<Widget>((member) => Container(
                           margin: const EdgeInsets.only(bottom: 12),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: member['image'] != null
-                                  ? NetworkImage(member['image'])
-                                  : null,
-                              child: member['image'] == null
-                                  ? Text(
-                                      (member['name'] ?? 'M')[0].toUpperCase(),
-                                    )
-                                  : null,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isDark
+                                  ? [
+                                      colorScheme.surface.withOpacity(0.6),
+                                      colorScheme.surface.withOpacity(0.4),
+                                    ]
+                                  : [
+                                      Colors.white,
+                                      colorScheme.primary.withOpacity(0.03),
+                                    ],
                             ),
-                            title: Text(member['name'] ?? 'Unknown'),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(member['role'] ?? ''),
-                                if (member['bio'] != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Text(
-                                      member['bio'],
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colorScheme.onSurface
-                                            .withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: colorScheme.primary.withOpacity(0.1),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colorScheme.primary.withOpacity(isDark ? 0.2 : 0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundImage: member['image'] != null
+                                    ? NetworkImage(member['image'])
+                                    : null,
+                                child: member['image'] == null
+                                    ? Text(
+                                        (member['name'] ?? 'M')[0].toUpperCase(),
+                                        style: const TextStyle(fontSize: 20),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      member['name'] ?? 'Unknown',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  ),
-                              ],
-                            ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      member['role'] ?? '',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: colorScheme.onSurface.withOpacity(0.7),
+                                      ),
+                                    ),
+                                    if (member['bio'] != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          member['bio'],
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: colorScheme.onSurface
+                                                .withOpacity(0.6),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ))
                     .toList(),
@@ -910,6 +1118,8 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
   }
 
   Widget _buildTimelineTab(BuildContext context, ColorScheme colorScheme) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final timeline = widget.project["timeline"];
     if (timeline == null || timeline is! List || timeline.isEmpty) {
       return Center(
@@ -946,7 +1156,7 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
           statusColor = Colors.green;
           statusIcon = Icons.check_circle;
         } else if (isInProgress) {
-          statusColor = Colors.orange;
+          statusColor = AppColors.button;
           statusIcon = Icons.radio_button_checked;
         } else {
           statusColor = Colors.grey;
@@ -964,6 +1174,13 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
                   decoration: BoxDecoration(
                     color: statusColor,
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: statusColor.withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Icon(statusIcon, color: Colors.white, size: 24),
                 ),
@@ -977,64 +1194,90 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Card(
+              child: Container(
                 margin: const EdgeInsets.only(bottom: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              phase['phase'] ?? 'Phase ${index + 1}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            colorScheme.surface.withOpacity(0.6),
+                            colorScheme.surface.withOpacity(0.4),
+                          ]
+                        : [
+                            Colors.white,
+                            statusColor.withOpacity(0.03),
+                          ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: statusColor.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withOpacity(isDark ? 0.2 : 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            phase['phase'] ?? 'Phase ${index + 1}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              status.replaceAll('-', ' ').toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: statusColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        phase['title'] ?? '',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
                         ),
-                      ),
-                      if (phase['date'] != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          phase['date'],
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: colorScheme.onSurface.withOpacity(0.6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            status.replaceAll('-', ' ').toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      phase['title'] ?? '',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (phase['date'] != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        phase['date'],
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ),
@@ -1046,6 +1289,8 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
   }
 
   Widget _buildInvestorsTab(BuildContext context, ColorScheme colorScheme) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final investors = widget.project["investors"];
     if (investors == null || investors is! List || investors.isEmpty) {
       return Center(
@@ -1081,44 +1326,98 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
         final name = '$firstName $lastName'.trim();
         final image = user?['profilePicUrl']?.toString();
 
-        return Card(
+        return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: CircleAvatar(
-              radius: 30,
-              backgroundImage: image != null && image.isNotEmpty
-                  ? NetworkImage(image)
-                  : null,
-              child: image == null || image.isEmpty
-                  ? Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : 'I',
-                      style: const TextStyle(fontSize: 24),
-                    )
-                  : null,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      colorScheme.surface.withOpacity(0.6),
+                      colorScheme.surface.withOpacity(0.4),
+                    ]
+                  : [
+                      Colors.white,
+                      colorScheme.primary.withOpacity(0.03),
+                    ],
             ),
-            title: Text(name.isNotEmpty ? name : 'Unknown Investor'),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${percentage}% invested'),
-                if (investedAt != null)
-                  Text(
-                    _formatDate(investedAt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-              ],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: colorScheme.primary.withOpacity(0.1),
+              width: 1.5,
             ),
-            trailing: Text(
-              '$percentage%',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withOpacity(isDark ? 0.2 : 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+                spreadRadius: 0,
               ),
-            ),
+            ],
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundImage: image != null && image.isNotEmpty
+                    ? NetworkImage(image)
+                    : null,
+                child: image == null || image.isEmpty
+                    ? Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : 'I',
+                        style: const TextStyle(fontSize: 24),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name.isNotEmpty ? name : 'Unknown Investor',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${percentage}% invested',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                    if (investedAt != null)
+                      Text(
+                        _formatDate(investedAt),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.button.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$percentage%',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.button,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
         }),
@@ -1127,6 +1426,8 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
   }
 
   Widget _buildDocumentsTab(BuildContext context, ColorScheme colorScheme) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final documents = widget.project["documents"];
     if (documents == null || documents is! List || documents.isEmpty) {
       return Center(
@@ -1156,31 +1457,84 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
         final title = doc['title']?.toString() ?? 'Document ${index + 1}';
         final fileUrl = doc['fileUrl']?.toString() ?? '';
 
-        return Card(
+        return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: Icon(Icons.description, color: colorScheme.primary, size: 32),
-            title: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      colorScheme.surface.withOpacity(0.6),
+                      colorScheme.surface.withOpacity(0.4),
+                    ]
+                  : [
+                      Colors.white,
+                      colorScheme.primary.withOpacity(0.03),
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: colorScheme.primary.withOpacity(0.1),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withOpacity(isDark ? 0.2 : 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+                spreadRadius: 0,
               ),
-            ),
-            subtitle: Text(
-              'PDF Document',
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurface.withOpacity(0.6),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.description, color: colorScheme.primary, size: 32),
               ),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.download),
-              onPressed: fileUrl.isNotEmpty
-                  ? () => _openDocument(fileUrl)
-                  : null,
-            ),
-            onTap: fileUrl.isNotEmpty ? () => _openDocument(fileUrl) : null,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'PDF Document',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.button.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.download, color: AppColors.button),
+                ),
+                onPressed: fileUrl.isNotEmpty
+                    ? () => _openDocument(fileUrl)
+                    : null,
+              ),
+            ],
           ),
         );
         }),
@@ -1189,134 +1543,213 @@ class _ProjectDetailsBodyState extends State<ProjectDetailsBody>
   }
 
   Widget _buildRisksReturnsTab(BuildContext context, ColorScheme colorScheme) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Risks Section
-          Row(
-            children: [
-              Icon(Icons.warning, color: Colors.orange, size: 28),
-              const SizedBox(width: 8),
-              const Text(
-                'Potential Risks',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+          Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        colorScheme.surface.withOpacity(0.6),
+                        colorScheme.surface.withOpacity(0.4),
+                      ]
+                    : [
+                        Colors.white,
+                        Colors.orange.withOpacity(0.03),
+                      ],
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (widget.project["potentialRisks"] != null &&
-              (widget.project["potentialRisks"] as List).isNotEmpty)
-            ...(widget.project["potentialRisks"] as List)
-                .map<Widget>((risk) => Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      color: Colors.orange.withOpacity(0.1),
-                      child: ListTile(
-                        leading: Icon(Icons.warning_amber, color: Colors.orange),
-                        title: Text(
-                          risk.toString(),
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ))
-                .toList()
-          else
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'No risks identified',
-                  style: TextStyle(
-                    color: colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.orange.withOpacity(0.2),
+                width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.orange.withOpacity(isDark ? 0.2 : 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
             ),
-
-          const SizedBox(height: 32),
-
-          // Returns Section
-          Row(
-            children: [
-              Icon(Icons.trending_up, color: Colors.green, size: 28),
-              const SizedBox(width: 8),
-              const Text(
-                'Expected Returns',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange, size: 28),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Potential Risks',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // ROI Card
-          Card(
-            color: Colors.green.withOpacity(0.1),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                const SizedBox(height: 16),
+                if (widget.project["potentialRisks"] != null &&
+                    (widget.project["potentialRisks"] as List).isNotEmpty)
+                  ...(widget.project["potentialRisks"] as List)
+                      .map<Widget>((risk) => Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.warning_amber, color: Colors.orange),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    risk.toString(),
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ))
+                      .toList()
+                else
                   Text(
-                    'ROI Target',
+                    'No risks identified',
                     style: TextStyle(
-                      fontSize: 14,
                       color: colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${widget.project["expectedROI"] ?? 0}%',
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
 
-          const SizedBox(height: 16),
-
-          // Additional Returns Info
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInfoRow(
-                    'Total Price',
-                    '\$${widget.project["totalPrice"] ?? 0}',
-                    Icons.attach_money,
-                    colorScheme,
-                  ),
-                  const Divider(),
-                  _buildInfoRow(
-                    'Available Percentage',
-                    '${widget.project["availablePercentage"] ?? 0}%',
-                    Icons.pie_chart,
-                    colorScheme,
-                  ),
-                  if (widget.project["progress"] != null) ...[
-                    const Divider(),
-                    _buildInfoRow(
-                      'Investment Progress',
-                      '${widget.project["progress"]}%',
-                      Icons.trending_up,
-                      colorScheme,
+          // Returns Section
+          Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        colorScheme.surface.withOpacity(0.6),
+                        colorScheme.surface.withOpacity(0.4),
+                      ]
+                    : [
+                        Colors.white,
+                        Colors.green.withOpacity(0.03),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.green.withOpacity(0.2),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(isDark ? 0.2 : 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.trending_up, color: Colors.green, size: 28),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Expected Returns',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                // ROI Card
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ROI Target',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${widget.project["expectedROI"] ?? 0}%',
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Additional Returns Info
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoRow(
+                        'Total Price',
+                        '\$${widget.project["totalPrice"] ?? 0}',
+                        Icons.attach_money,
+                        colorScheme,
+                      ),
+                      const Divider(),
+                      _buildInfoRow(
+                        'Available Percentage',
+                        '${widget.project["availablePercentage"] ?? 0}%',
+                        Icons.pie_chart,
+                        colorScheme,
+                      ),
+                      if (widget.project["progress"] != null) ...[
+                        const Divider(),
+                        _buildInfoRow(
+                          'Investment Progress',
+                          '${widget.project["progress"]}%',
+                          Icons.trending_up,
+                          colorScheme,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1374,7 +1807,16 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: _tabBar,
     );
   }

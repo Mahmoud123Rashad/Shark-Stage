@@ -11,12 +11,14 @@ class EntrepreneurBottomNavBar extends StatefulWidget {
   final String email;
   final String? userId;
   final String? role;
+  final int? initialIndex;
 
   const EntrepreneurBottomNavBar({
     super.key,
     required this.email,
     this.userId,
     this.role,
+    this.initialIndex,
   });
 
   @override
@@ -25,13 +27,14 @@ class EntrepreneurBottomNavBar extends StatefulWidget {
 }
 
 class _EntrepreneurBottomNavBarState extends State<EntrepreneurBottomNavBar> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex ?? 0;
     _pages = [
       const ProjectsScreen(),
       const EntrepreneurDashboard(),
