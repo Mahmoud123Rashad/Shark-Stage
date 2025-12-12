@@ -315,10 +315,22 @@ class _AddProjectWizardScreenState extends State<AddProjectWizardScreen> {
         }
       }
 
-      // Timeline
+      // Timeline - Filter out empty phases
       final timeline = _pendingProjectData!['timeline'] as List?;
       if (timeline != null && timeline.isNotEmpty) {
-        fields['timeline'] = jsonEncode(timeline);
+        final filteredTimeline = timeline
+            .where((phase) {
+              final phaseMap = phase as Map<String, dynamic>;
+              final phaseName = phaseMap['phase']?.toString().trim() ?? '';
+              final title = phaseMap['title']?.toString().trim() ?? '';
+              final date = phaseMap['date']?.toString().trim() ?? '';
+              // Only include phases that have all required fields filled
+              return phaseName.isNotEmpty && title.isNotEmpty && date.isNotEmpty;
+            })
+            .toList();
+        if (filteredTimeline.isNotEmpty) {
+          fields['timeline'] = jsonEncode(filteredTimeline);
+        }
       }
 
       final files = <String, File>{};
@@ -467,24 +479,65 @@ class _AddProjectWizardScreenState extends State<AddProjectWizardScreen> {
                 if (_error != null)
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade200),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isDark
+                            ? [
+                                Colors.red.withOpacity(0.2),
+                                Colors.red.withOpacity(0.1),
+                              ]
+                            : [
+                                Colors.red.shade50,
+                                Colors.red.shade100.withOpacity(0.3),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.red.withOpacity(0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(isDark ? 0.3 : 0.15),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                          spreadRadius: 0,
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: Colors.red.shade700),
-                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.error_outline, color: Colors.red.shade700, size: 24),
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             _error!,
-                            style: TextStyle(color: Colors.red.shade700),
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, size: 20),
+                          icon: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.close, size: 18),
+                          ),
                           onPressed: () => setState(() => _error = null),
                           color: Colors.red.shade700,
                         ),
@@ -533,36 +586,88 @@ class _AddProjectWizardScreenState extends State<AddProjectWizardScreen> {
               Positioned(
                 left: 16,
                 bottom: 16,
-                child: FloatingActionButton(
-                  heroTag: 'back_button',
-                  onPressed: _isLoading ? null : _previousStep,
-                  backgroundColor: theme.colorScheme.surface,
-                  foregroundColor: theme.colorScheme.onSurface,
-                  elevation: 4,
-                  child: const Icon(Icons.arrow_back),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [
+                              theme.colorScheme.surface.withOpacity(0.9),
+                              theme.colorScheme.surface.withOpacity(0.7),
+                            ]
+                          : [
+                              Colors.white,
+                              theme.colorScheme.surface,
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isDark ? 0.3 : 0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton(
+                    heroTag: 'back_button',
+                    onPressed: _isLoading ? null : _previousStep,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    foregroundColor: theme.colorScheme.onSurface,
+                    child: const Icon(Icons.arrow_back),
+                  ),
                 ),
               ),
             // Floating Next Button (Right)
             Positioned(
               right: 16,
               bottom: 16,
-              child: FloatingActionButton.extended(
-                heroTag: 'next_button',
-                onPressed: _isLoading ? null : _nextStep,
-                backgroundColor: AppColors.button,
-                foregroundColor: Colors.white,
-                elevation: 4,
-                icon: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Icon(_currentStep == 4 ? Icons.payment : Icons.arrow_forward),
-                label: Text(_currentStep == 4 ? 'Proceed to Payment' : 'Next'),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.button,
+                      AppColors.button.withOpacity(0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.button.withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: FloatingActionButton.extended(
+                  heroTag: 'next_button',
+                  onPressed: _isLoading ? null : _nextStep,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  foregroundColor: Colors.white,
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Icon(_currentStep == 4 ? Icons.payment : Icons.arrow_forward),
+                  label: Text(
+                    _currentStep == 4 ? 'Proceed to Payment' : 'Next',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
